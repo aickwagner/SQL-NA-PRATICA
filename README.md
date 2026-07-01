@@ -3,6 +3,8 @@
 
 Simulador de consultas SQL, com animações, desafios e editor de código exclusivo com tema retrô 8-bit.
 
+Acesse clicando neste [link](https://aickwagner.github.io/SQL-NA-PRATICA/) ou faça o download do arquivo localmente. 
+
 ![simulacoes](screenshots/simulacoes.gif)
 
 Trata-se de uma página web interativa, onde o usuário pode visualizar simulações e animações de comandos e funções do SQL, como Join, Where, Group By....
