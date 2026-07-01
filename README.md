@@ -3,13 +3,13 @@
 
 Simulador de consultas SQL, com animações, desafios e editor de código exclusivo com tema retrô 8-bit.
 
-[simulacoes](screenshots/simulacoes.gif)
+![simulacoes](screenshots/simulacoes.gif)
 
 Trata-se de uma página web interativa, onde o usuário pode visualizar simulações e animações de comandos e funções do SQL, como Join, Where, Group By....
 
 Conta com uma aba de desafios, atualmente com 12 missões contextualizadas que unem alguns conceitos básicos de SQL.
 
-[simulacoes](screenshots/desafios.gif)
+![simulacoes](screenshots/desafios.gif)
 
 O projeto foi criado com a ajuda do OpenCode, e atualmente está em fase de desenvolvimento.
 
@@ -33,6 +33,6 @@ Meu hobbie favorito é misturar meus conhecimentos para criar projetos que facil
 
 ## Screenshots
 
-[simulacoes](screenshots/pagina-inicial.png)
-[simulacoes](screenshots/simulacoes.png)
-[simulacoes](screenshots/desafios.png)
+![simulacoes](screenshots/pagina-inicial.png)
+![simulacoes](screenshots/simulacoes.png)
+![simulacoes](screenshots/desafios.png)
