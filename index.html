@@ -148,6 +148,29 @@
             font-size: .32rem; opacity: .4;
             max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
+        .pg-db-group { border-bottom: 1px solid var(--border); }
+        .pg-db-group:last-child { border-bottom: none; }
+        .pg-db-header {
+            display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+            cursor: pointer; background: rgba(121,192,255,.04); user-select: none;
+            transition: background .15s;
+        }
+        .pg-db-header:hover { background: rgba(121,192,255,.08); }
+        .pg-db-toggle { font-size: .35rem; color: var(--hl-cyan); transition: transform .2s; display: inline-block; width: 12px; }
+        .pg-db-group.collapsed .pg-db-toggle { transform: rotate(-90deg); }
+        .pg-db-name { font-size: .42rem; font-weight: 700; color: var(--hl-cyan); text-transform: uppercase; letter-spacing: .5px; }
+        .pg-db-count { font-size: .35rem; opacity: .5; margin-left: auto; }
+        .pg-db-label { font-size: .32rem; color: var(--hl-yellow); opacity: .6; margin-left: 4px; }
+        .pg-db-tables { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 12px; }
+        .pg-db-group.collapsed .pg-db-tables { display: none; }
+        .pg-db-tables .pg-ts-item { width: auto; min-width: 120px; flex: 0 0 auto; }
+        .pg-schema-db-header {
+            padding: 8px 14px; margin-bottom: 4px;
+            background: rgba(121,192,255,.06); border: 1px solid rgba(121,192,255,.15);
+            font-size: .42rem; font-weight: 700; color: var(--hl-cyan);
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .pg-schema-db-header .pg-db-name { font-size: .42rem; }
         .wrapper { width: 100%; max-width: var(--max-w); }
         /* --- Layout de Cartoes de Simulacao --- */
         .sim-card {
@@ -598,8 +621,12 @@
         @media (hover: hover) and (pointer: fine) {
             .cursor-arrow { display: block; }
         }
+        .cursor-arrow .cur-arrow { display: block; }
         .cursor-arrow.hovering {
             animation: cursorBounce .3s ease;
+        }
+        .cursor-arrow.link-hover {
+            animation: cursorPulse 1s ease-in-out .3s infinite;
         }
         .cursor-arrow.hovering svg path:first-child { fill: var(--hl-green); }
         .cursor-arrow.clicking {
@@ -610,6 +637,10 @@
             0% { transform: translate(-1px, -1px) scale(1); }
             40% { transform: translate(-1px, -3px) scale(1.1); }
             100% { transform: translate(-1px, -1px) scale(1); }
+        }
+        @keyframes cursorPulse {
+            0%, 100% { transform: translate(-1px, -1px) scale(1); }
+            50% { transform: translate(-1px, -1px) scale(1.08); }
         }
 
         @keyframes failGlow {
@@ -1855,12 +1886,12 @@
                 <div class="challenge-main" style="max-width:100%;flex:1;">
                     <div class="pg-hero">
                         <div class="pg-hero-title">🧪 Playground SQL</div>
-                        <div class="pg-hero-sub">Escreva qualquer SQL, crie tabelas com <strong>CREATE TABLE</strong>, insira dados com <strong>INSERT</strong> e consulte com <strong>SELECT</strong>. Escolha abaixo quais tabelas dos desafios estarão disponíveis.</div>
+                        <div class="pg-hero-sub">Escreva qualquer SQL como em um Workbench real. Crie bancos com <strong>CREATE DATABASE</strong>, selecione com <strong>USE</strong>, crie tabelas com <strong>CREATE TABLE</strong>, insira dados com <strong>INSERT</strong> e consulte com <strong>SELECT</strong>. As tabelas dos desafios já estão organizadas em bancos.</div>
                     </div>
 
                     <div class="pg-table-selector" id="pg-table-selector">
                         <div class="pg-ts-header">
-                            <span class="pg-ts-label">📦 Tabelas Disponíveis</span>
+                            <span class="pg-ts-label">📦 Bancos & Tabelas</span>
                             <span class="pg-ts-count" id="pg-ts-count">0 selecionadas</span>
                             <button class="pg-ts-toggle" id="pg-ts-toggle" onclick="pgToggleAllTables()">[ Todas ]</button>
                         </div>
@@ -3274,6 +3305,13 @@
         var _playgroundEditor = null;
         var _playgroundInitDone = false;
         var _pgSelectedTables = null;
+        var _pgDbMap = {
+            'base': ['sobreviventes', 'moradores', 'arsenal', 'missoes'],
+            'campo': ['postos', 'avistamentos', 'exploradores', 'coletas'],
+            'ciencia': ['pesquisadores', 'amostras', 'reagentes', 'cientistas', 'tarefas'],
+            'logistica': ['pilotos', 'cargas', 'suprimentos']
+        };
+        var _pgCurrentDb = null;
 
         function collectAllTables() {
             var tables = {};
@@ -3285,6 +3323,14 @@
                     }
                 });
             });
+            // Include user-created tables
+            if (window._pgUserTables) {
+                Object.keys(window._pgUserTables).forEach(function(tname) {
+                    if (tname.indexOf('___') === -1 && !tables[tname]) {
+                        tables[tname] = window._pgUserTables[tname];
+                    }
+                });
+            }
             return tables;
         }
 
@@ -3303,6 +3349,14 @@
             if (!el) return;
             var n = _pgSelectedTables ? _pgSelectedTables.size : 0;
             el.textContent = n + ' selecionada' + (n !== 1 ? 's' : '');
+            // Update per-database counts
+            Object.keys(_pgDbMap).forEach(function(dbName) {
+                var countEl = document.getElementById('pg-db-count-' + dbName);
+                if (!countEl) return;
+                var dbAll = _pgDbMap[dbName];
+                var dbSelected = dbAll.filter(function(t) { return _pgSelectedTables && _pgSelectedTables.has(t); }).length;
+                countEl.textContent = dbSelected + '/' + dbAll.length;
+            });
         }
 
         function pgToggleTable(name) {
@@ -3313,7 +3367,11 @@
                 _pgSelectedTables.add(name);
             }
             var item = document.querySelector('.pg-ts-item[data-tbl="' + name + '"]');
-            if (item) item.classList.toggle('selected', _pgSelectedTables.has(name));
+            if (item) {
+                item.classList.toggle('selected', _pgSelectedTables.has(name));
+                var check = item.querySelector('.pg-ts-check');
+                if (check) check.textContent = _pgSelectedTables.has(name) ? '\u2713' : '';
+            }
             pgUpdateSchemas();
             pgUpdateCount();
         }
@@ -3330,7 +3388,10 @@
             }
             document.querySelectorAll('.pg-ts-item').forEach(function(el) {
                 var name = el.getAttribute('data-tbl');
-                el.classList.toggle('selected', _pgSelectedTables.has(name));
+                var sel = _pgSelectedTables.has(name);
+                el.classList.toggle('selected', sel);
+                var check = el.querySelector('.pg-ts-check');
+                if (check) check.textContent = sel ? '\u2713' : '';
             });
             pgUpdateSchemas();
             pgUpdateCount();
@@ -3342,31 +3403,48 @@
             if (!schemas) return;
             schemas.innerHTML = '';
             var selected = getSelectedTables();
+            var dbGroups = {};
+            // Group selected tables by database
             Object.keys(selected).forEach(function(tname) {
-                var rows = selected[tname];
-                if (!rows || !rows.length) return;
-                var cols = Object.keys(rows[0]);
-                var panel = document.createElement('div');
-                panel.className = 'schema-panel';
-                var html = '<h4>TABELA: <span class="tbl-name" data-insert="' + tname + '">' + tname + '</span></h4><div class="schema-panel-content"><div class="schema-table-scroll"><table data-tbl="pg-' + tname + '"><thead><tr>';
-                cols.forEach(function(c) {
-                    html += '<th class="col-insertable" data-insert="' + c + '">' + c + '</th>';
+                var dbName = null;
+                Object.keys(_pgDbMap).forEach(function(db) {
+                    if (_pgDbMap[db].indexOf(tname) !== -1) dbName = db;
                 });
-                html += '</tr></thead><tbody>';
-                var maxRows = Math.min(rows.length, 8);
-                for (var i = 0; i < maxRows; i++) {
-                    html += '<tr>';
+                if (!dbName) dbName = 'avulso';
+                if (!dbGroups[dbName]) dbGroups[dbName] = [];
+                dbGroups[dbName].push(tname);
+            });
+            Object.keys(dbGroups).forEach(function(dbName) {
+                var dbHeader = document.createElement('div');
+                dbHeader.className = 'pg-schema-db-header';
+                dbHeader.innerHTML = '<span class="pg-db-name">DATABASE: ' + dbName + '</span>';
+                schemas.appendChild(dbHeader);
+                dbGroups[dbName].forEach(function(tname) {
+                    var rows = selected[tname];
+                    if (!rows || !rows.length) return;
+                    var cols = Object.keys(rows[0]);
+                    var panel = document.createElement('div');
+                    panel.className = 'schema-panel';
+                    var html = '<h4>TABELA: <span class="tbl-name" data-insert="' + tname + '">' + tname + '</span></h4><div class="schema-panel-content"><div class="schema-table-scroll"><table data-tbl="pg-' + tname + '"><thead><tr>';
                     cols.forEach(function(c) {
-                        html += '<td>' + rows[i][c] + '</td>';
+                        html += '<th class="col-insertable" data-insert="' + c + '">' + c + '</th>';
                     });
-                    html += '</tr>';
-                }
-                if (rows.length > 8) {
-                    html += '<tr><td colspan="' + cols.length + '" style="text-align:center;opacity:.4;font-size:.35rem">... e mais ' + (rows.length - 8) + ' linhas</td></tr>';
-                }
-                html += '</tbody></table></div></div>';
-                panel.innerHTML = html;
-                schemas.appendChild(panel);
+                    html += '</tr></thead><tbody>';
+                    var maxRows = Math.min(rows.length, 8);
+                    for (var i = 0; i < maxRows; i++) {
+                        html += '<tr>';
+                        cols.forEach(function(c) {
+                            html += '<td>' + rows[i][c] + '</td>';
+                        });
+                        html += '</tr>';
+                    }
+                    if (rows.length > 8) {
+                        html += '<tr><td colspan="' + cols.length + '" style="text-align:center;opacity:.4;font-size:.35rem">... e mais ' + (rows.length - 8) + ' linhas</td></tr>';
+                    }
+                    html += '</tbody></table></div></div>';
+                    panel.innerHTML = html;
+                    schemas.appendChild(panel);
+                });
             });
         }
 
@@ -3375,28 +3453,44 @@
             _playgroundInitDone = true;
 
             var allTables = collectAllTables();
-            var keys = Object.keys(allTables);
 
-            _pgSelectedTables = new Set(keys);
+            _pgSelectedTables = new Set();
 
-            // Build table selector list
+            // Build table selector list with database groups
             var list = document.getElementById('pg-ts-list');
             if (list) {
                 list.innerHTML = '';
-                keys.forEach(function(tname) {
-                    var rows = allTables[tname];
-                    var cols = rows && rows.length ? Object.keys(rows[0]) : [];
-                    var item = document.createElement('div');
-                    item.className = 'pg-ts-item selected';
-                    item.setAttribute('data-tbl', tname);
-                    item.innerHTML = '<span class="pg-ts-check">✓</span><span class="pg-ts-name">' + tname + '</span><span class="pg-ts-cols">(' + cols.join(', ') + ')</span>';
-                    item.onclick = function() { pgToggleTable(tname); };
-                    list.appendChild(item);
+                Object.keys(_pgDbMap).forEach(function(dbName) {
+                    var dbTables = _pgDbMap[dbName];
+                    var group = document.createElement('div');
+                    group.className = 'pg-db-group';
+                    group.setAttribute('data-db', dbName);
+
+                    var header = document.createElement('div');
+                    header.className = 'pg-db-header';
+                    header.innerHTML = '<span class="pg-db-toggle">&#9660;</span><span class="pg-db-name">' + dbName + '</span><span class="pg-db-label">(' + dbTables.length + ' tabelas)</span><span class="pg-db-count" id="pg-db-count-' + dbName + '">0/' + dbTables.length + '</span>';
+                    header.onclick = function() { group.classList.toggle('collapsed'); };
+                    group.appendChild(header);
+
+                    var tablesDiv = document.createElement('div');
+                    tablesDiv.className = 'pg-db-tables';
+                    dbTables.forEach(function(tname) {
+                        if (!allTables[tname]) return;
+                        var rows = allTables[tname];
+                        var cols = rows && rows.length ? Object.keys(rows[0]) : [];
+                        var item = document.createElement('div');
+                        item.className = 'pg-ts-item';
+                        item.setAttribute('data-tbl', tname);
+                        item.setAttribute('data-db', dbName);
+                        item.innerHTML = '<span class="pg-ts-check"></span><span class="pg-ts-name">' + tname + '</span><span class="pg-ts-cols">(' + cols.join(', ') + ')</span>';
+                        item.onclick = function() { pgToggleTable(tname); };
+                        tablesDiv.appendChild(item);
+                    });
+                    group.appendChild(tablesDiv);
+                    list.appendChild(group);
                 });
             }
             pgUpdateCount();
-
-            // Build schema panels for initially selected tables
             pgUpdateSchemas();
 
             var el = document.getElementById('playground-editor');
@@ -3410,15 +3504,69 @@
                 tabSize: 2,
                 autofocus: false,
                 lineWrapping: false,
-                viewportMargin: Infinity,
-                extraKeys: { 'Ctrl-Enter': runPlayground, 'Cmd-Enter': runPlayground }
+                placeholder: 'Digite sua query SQL aqui...',
+                extraKeys: {
+                    'Ctrl-Enter': runPlayground,
+                    'Cmd-Enter': runPlayground,
+                    'Tab': function(cm) {
+                        if (cm.somethingSelected()) {
+                            cm.indentSelection('add');
+                        } else {
+                            cm.replaceSelection('  ', 'end');
+                        }
+                    },
+                    'Shift-Tab': function(cm) {
+                        cm.indentSelection('subtract');
+                    },
+                    'Enter': function(cm) {
+                        var cur = cm.getCursor();
+                        var line = cm.getLine(cur.line);
+                        var indent = line.match(/^(\s*)/)[1];
+                        cm.replaceSelection('\n' + indent, 'end');
+                    }
+                },
+                viewportMargin: Infinity
             });
-            _playgroundEditor.setSize(null, '150px');
-            _playgroundEditor.on('change', function() {
-                var h = Math.max(100, _playgroundEditor.getScrollInfo().height + 24);
-                _playgroundEditor.setSize(null, h + 'px');
+            _playgroundEditor.on('change', function() { updateEditorHeight(_playgroundEditor); });
+            // sound + glow (desktop)
+            _playgroundEditor.on('keydown', function(cm, event) {
+                var k = event.key;
+                if (Object.keys(_kwAnims).length > 0) {
+                    document.querySelectorAll('.CodeMirror.kw-animating').forEach(function(el) {
+                        el.classList.remove('kw-animating');
+                    });
+                }
+                if (k === ' ') { playSound('space'); }
+                else if (k === 'Enter') { playSound('enter'); }
+                else if (k === 'Backspace') { playSound('backspace'); }
+                else if (k.length === 1 && !event.ctrlKey && !event.metaKey) { playSound('click'); setTimeout(function() {
+                    var cur = cm.getCursor(), ln = cm.getLine(cur.line), e = cur.ch;
+                    if (e > 0 && !/\w/.test(ln[e - 1])) e--;
+                    var s = e; while (s > 0 && /\w/.test(ln[s - 1])) s--;
+                    Object.keys(_kwAnims).forEach(function(ak) {
+                        var parts = ak.split(':');
+                        var aLine = parseInt(parts[0]), aStart = parseInt(parts[1]);
+                        if (cur.line === aLine && s <= aStart && e >= aStart) {
+                            var aWord = ln.substring(s, e).toUpperCase();
+                            if (!SQL_KEYWORDS.includes(aWord)) cancelKeywordComplete(ak);
+                        }
+                    });
+                    if (!checkKeywordComplete(cm)) { try { if (window.__glowChar) window.__glowChar(cm); } catch(ex) {} }
+                }, 0); }
             });
-            _playgroundEditor.setValue('-- Escreva seu SQL aqui\nSELECT * FROM ' + (keys.length ? keys[0] : ''));
+            // Bloquear teclado nativo mobile
+            if (_isMobile()) {
+                var _cmInput = _playgroundEditor.getInputField();
+                if (_cmInput) {
+                    _cmInput.setAttribute('inputmode', 'none');
+                    _cmInput.setAttribute('autocomplete', 'off');
+                    _cmInput.setAttribute('autocorrect', 'off');
+                    _cmInput.setAttribute('autocapitalize', 'off');
+                    _cmInput.setAttribute('spellcheck', 'false');
+                }
+            }
+            _playgroundEditor.setValue('-- Selecione tabelas ao lado e escreva seu SQL aqui\n-- Exemplo: SELECT * FROM sobreviventes WHERE nivel > 3\n-- Exemplo: SELECT * FROM base.sobreviventes JOIN campo.postos ON ...');
+            updateEditorHeight(_playgroundEditor);
         }
 
         function pgClear() {
@@ -3444,6 +3592,239 @@
             resultPanel.className = 'result-panel no-collapse';
             resultMsg.className = '';
             if (rowCount) rowCount.textContent = '';
+
+            var sqlLower = normalizeSQL(sql);
+
+            // Handle SHOW DATABASES
+            if (/^\s*show\s+databases\s*$/i.test(sql)) {
+                var dbs = Object.keys(_pgDbMap);
+                if (_pgCurrentDb) dbs.push('(ativo: ' + _pgCurrentDb + ')');
+                resultHead.innerHTML = '<tr><th>database</th></tr>';
+                resultBody.innerHTML = dbs.map(function(d) { return '<tr><td>' + d + '</td></tr>'; }).join('');
+                resultPanel.style.display = 'block';
+                resultMsg.className = 'pass';
+                resultMsg.textContent = '✔ ' + Object.keys(_pgDbMap).length + ' database(s) encontrado(s).';
+                if (rowCount) rowCount.textContent = Object.keys(_pgDbMap).length + ' registro(s)';
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
+
+            // Handle SHOW TABLES
+            if (/^\s*show\s+tables\s*$/i.test(sql)) {
+                var allTables = collectAllTables();
+                var dbFilter = _pgCurrentDb && _pgDbMap[_pgCurrentDb] ? _pgDbMap[_pgCurrentDb] : null;
+                var tableNames = Object.keys(allTables).filter(function(t) {
+                    if (dbFilter) return dbFilter.indexOf(t) !== -1;
+                    return true;
+                });
+                resultHead.innerHTML = '<tr><th>tabela</th><th>database</th></tr>';
+                resultBody.innerHTML = tableNames.map(function(t) {
+                    var dbName = 'avulso';
+                    Object.keys(_pgDbMap).forEach(function(db) {
+                        if (_pgDbMap[db].indexOf(t) !== -1) dbName = db;
+                    });
+                    return '<tr><td>' + t + '</td><td>' + dbName + '</td></tr>';
+                }).join('');
+                resultPanel.style.display = 'block';
+                resultMsg.className = 'pass';
+                resultMsg.textContent = '✔ ' + tableNames.length + ' tabela(s) encontrada(s).';
+                if (rowCount) rowCount.textContent = tableNames.length + ' registro(s)';
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
+
+            // Handle USE database
+            var useMatch = sqlLower.match(/^\s*use\s+(\w+)\s*$/);
+            if (useMatch) {
+                var dbName = useMatch[1];
+                if (_pgDbMap[dbName]) {
+                    _pgCurrentDb = dbName;
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'pass';
+                    resultMsg.textContent = '✔ Database "' + dbName + '" selecionado.';
+                } else {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Database "' + dbName + '" não encontrado. Crie com CREATE DATABASE ' + dbName;
+                }
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
+
+            // Handle CREATE DATABASE
+            var createDbMatch = sqlLower.match(/^\s*create\s+database\s+(\w+)\s*$/);
+            if (createDbMatch) {
+                var newDbName = createDbMatch[1];
+                if (_pgDbMap[newDbName]) {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Database "' + newDbName + '" já existe.';
+                } else {
+                    _pgDbMap[newDbName] = [];
+                    _pgCurrentDb = newDbName;
+                    // Rebuild selector UI
+                    var list = document.getElementById('pg-ts-list');
+                    if (list) {
+                        var group = document.createElement('div');
+                        group.className = 'pg-db-group';
+                        group.setAttribute('data-db', newDbName);
+                        var header = document.createElement('div');
+                        header.className = 'pg-db-header';
+                        header.innerHTML = '<span class="pg-db-toggle">&#9660;</span><span class="pg-db-name">' + newDbName + '</span><span class="pg-db-label">(0 tabelas)</span><span class="pg-db-count" id="pg-db-count-' + newDbName + '">0/0</span>';
+                        header.onclick = function() { group.classList.toggle('collapsed'); };
+                        group.appendChild(header);
+                        var tablesDiv = document.createElement('div');
+                        tablesDiv.className = 'pg-db-tables';
+                        group.appendChild(tablesDiv);
+                        list.appendChild(group);
+                    }
+                    pgUpdateCount();
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'pass';
+                    resultMsg.textContent = '✔ Database "' + newDbName + '" criado. Use USE ' + newDbName + ' para selecioná-lo.';
+                }
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
+
+            // Handle CREATE TABLE in current database
+            var createTblMatch = sqlLower.match(/^\s*create\s+table\s+(\w+)\s*\(([\s\S]+)\)\s*$/);
+            if (createTblMatch) {
+                var tblName = createTblMatch[1];
+                var colsDef = createTblMatch[2];
+                var dbName = _pgCurrentDb;
+                if (!dbName) {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Selecione um database primeiro com USE nome_database.';
+                    try { playSound('snap'); } catch(e) {}
+                    return;
+                }
+                if (!_pgDbMap[dbName]) _pgDbMap[dbName] = [];
+                if (_pgDbMap[dbName].indexOf(tblName) !== -1) {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Tabela "' + tblName + '" já existe no database "' + dbName + '".';
+                    try { playSound('snap'); } catch(e) {}
+                    return;
+                }
+                // Parse column definitions
+                var colDefs = colsDef.split(',').map(function(cd) {
+                    var parts = cd.trim().split(/\s+/);
+                    return { name: parts[0], type: (parts[1] || 'STRING').toUpperCase() };
+                });
+                // Create empty table entry
+                _pgDbMap[dbName].push(tblName);
+                // Add to collectAllTables cache via a user-tables map
+                if (!window._pgUserTables) window._pgUserTables = {};
+                window._pgUserTables[tblName] = [];
+                window._pgUserTables[tblName + '___cols'] = colDefs;
+                // Add UI item
+                var tablesDiv = document.querySelector('.pg-db-group[data-db="' + dbName + '"] .pg-db-tables');
+                if (tablesDiv) {
+                    var item = document.createElement('div');
+                    item.className = 'pg-ts-item';
+                    item.setAttribute('data-tbl', tblName);
+                    item.setAttribute('data-db', dbName);
+                    item.innerHTML = '<span class="pg-ts-check"></span><span class="pg-ts-name">' + tblName + '</span><span class="pg-ts-cols">(' + colDefs.map(function(c) { return c.name; }).join(', ') + ')</span>';
+                    item.onclick = function() { pgToggleTable(tblName); };
+                    tablesDiv.appendChild(item);
+                }
+                pgUpdateCount();
+                // Update header count
+                var countEl = document.getElementById('pg-db-count-' + dbName);
+                if (countEl) {
+                    var total = _pgDbMap[dbName].length;
+                    var sel = _pgDbMap[dbName].filter(function(t) { return _pgSelectedTables && _pgSelectedTables.has(t); }).length;
+                    countEl.textContent = sel + '/' + total;
+                }
+                resultPanel.style.display = 'block';
+                resultMsg.className = 'pass';
+                resultMsg.textContent = '✔ Tabela "' + tblName + '" criada no database "' + dbName + '".';
+                if (rowCount) rowCount.textContent = '0 registro(s)';
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
+
+            // Handle INSERT INTO for user-created tables
+            var insertMatch = sqlLower.match(/^\s*insert\s+into\s+(\w+)\s*(?:\(([^)]+)\))?\s*values\s*\((.+)\)\s*$/);
+            if (insertMatch) {
+                var tblName = insertMatch[1];
+                var colNames = insertMatch[2] ? insertMatch[2].split(',').map(function(c) { return c.trim(); }) : null;
+                var valsStr = insertMatch[3];
+                // Parse values (handle strings and numbers)
+                var vals = [];
+                var re = /'([^']*)'|(\d+(?:\.\d+)?)|(\w+)/g;
+                var vm;
+                while ((vm = re.exec(valsStr)) !== null) {
+                    if (vm[1] !== undefined) vals.push(vm[1]);
+                    else if (vm[2] !== undefined) vals.push(Number(vm[2]));
+                    else if (vm[3] !== undefined) {
+                        var lw = vm[3].toLowerCase();
+                        if (lw === 'null') vals.push(null);
+                        else if (lw === 'true') vals.push(true);
+                        else if (lw === 'false') vals.push(false);
+                        else vals.push(vm[3]);
+                    }
+                }
+                // Find which database the table belongs to
+                var tblDb = null;
+                Object.keys(_pgDbMap).forEach(function(db) {
+                    if (_pgDbMap[db].indexOf(tblName) !== -1) tblDb = db;
+                });
+                if (!tblDb && window._pgUserTables && window._pgUserTables[tblName]) tblDb = _pgCurrentDb;
+                if (!tblDb) {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Tabela "' + tblName + '" não encontrada.';
+                    try { playSound('snap'); } catch(e) {}
+                    return;
+                }
+                if (!window._pgUserTables) window._pgUserTables = {};
+                if (!window._pgUserTables[tblName]) window._pgUserTables[tblName] = [];
+                // Get column definitions
+                var colDefs = window._pgUserTables[tblName + '___cols'];
+                if (!colDefs) {
+                    // Try to infer from existing rows
+                    var allTbls = collectAllTables();
+                    if (allTbls[tblName] && allTbls[tblName].length > 0) {
+                        colDefs = Object.keys(allTbls[tblName][0]).map(function(c) { return { name: c, type: 'STRING' }; });
+                    }
+                }
+                if (!colDefs) {
+                    resultPanel.style.display = 'block';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Tabela "' + tblName + '" sem definição de colunas.';
+                    try { playSound('snap'); } catch(e) {}
+                    return;
+                }
+                var row = {};
+                if (colNames) {
+                    colNames.forEach(function(c, i) { row[c] = vals[i] !== undefined ? vals[i] : null; });
+                } else {
+                    colDefs.forEach(function(c, i) { row[c.name] = vals[i] !== undefined ? vals[i] : null; });
+                }
+                window._pgUserTables[tblName].push(row);
+                // Auto-select the table
+                if (!_pgSelectedTables) _pgSelectedTables = new Set();
+                if (!_pgSelectedTables.has(tblName)) {
+                    _pgSelectedTables.add(tblName);
+                    var item = document.querySelector('.pg-ts-item[data-tbl="' + tblName + '"]');
+                    if (item) {
+                        item.classList.add('selected');
+                        var check = item.querySelector('.pg-ts-check');
+                        if (check) check.textContent = '\u2713';
+                    }
+                    pgUpdateSchemas();
+                    pgUpdateCount();
+                }
+                resultPanel.style.display = 'block';
+                resultMsg.className = 'pass';
+                resultMsg.textContent = '✔ 1 linha inserida na tabela "' + tblName + '".';
+                if (rowCount) rowCount.textContent = window._pgUserTables[tblName].length + ' registro(s)';
+                try { playSound('snap'); } catch(e) {}
+                return;
+            }
 
             var selected = getSelectedTables();
             if (Object.keys(selected).length === 0) {
@@ -3600,7 +3981,29 @@
             sql = sql.replace(/;$/, '').trim();
             try {
                 var db = new alasql.Database();
+                // Create databases and insert tables
+                var tableDbMap = {};
+                Object.keys(_pgDbMap).forEach(function(dbName) {
+                    db.exec('CREATE DATABASE ' + dbName);
+                    db.exec('USE ' + dbName);
+                    _pgDbMap[dbName].forEach(function(tname) {
+                        if (!tables[tname]) return;
+                        tableDbMap[tname] = dbName;
+                        var rows = tables[tname];
+                        if (!rows.length) return;
+                        var cols = Object.keys(rows[0]);
+                        var defs = cols.map(function(c) { return c + ' ' + sqlType(rows[0][c]); });
+                        db.exec('CREATE TABLE ' + tname + ' (' + defs.join(', ') + ')');
+                        rows.forEach(function(r) {
+                            var vals = cols.map(function(c) { return r[c]; });
+                            var placeholders = cols.map(function() { return '?'; });
+                            db.exec('INSERT INTO ' + tname + ' (' + cols.join(', ') + ') VALUES (' + placeholders.join(', ') + ')', vals);
+                        });
+                    });
+                });
+                // Tables not in any database go to default
                 Object.keys(tables).forEach(function(tname) {
+                    if (tableDbMap[tname]) return;
                     var rows = tables[tname];
                     if (!rows.length) return;
                     var cols = Object.keys(rows[0]);
@@ -4138,12 +4541,13 @@
             return true;
         }
 
-        function updateEditorHeight() {
-            if (!sqlEditor) return;
+        function updateEditorHeight(cm) {
+            cm = cm || sqlEditor;
+            if (!cm) return;
             var minHeight = 100;
-            var h = Math.max(minHeight, sqlEditor.getScrollInfo().height + 24);
-            sqlEditor.setSize(null, h + 'px');
-            sqlEditor.refresh();
+            var h = Math.max(minHeight, cm.getScrollInfo().height + 24);
+            cm.setSize(null, h + 'px');
+            cm.refresh();
         }
         
         function initCodeMirror() {
@@ -4305,9 +4709,10 @@
             return reserve;
         }
         function _positionKb() {
-            if (!sqlEditor || !_kbPopup || !_isMobile() || !_kbPopup.classList.contains('kb-show')) return;
+            var cm = _getActiveEditor();
+            if (!cm || !_kbPopup || !_isMobile() || !_kbPopup.classList.contains('kb-show')) return;
             _reserveKbSpace();
-            var cur = sqlEditor.cursorCoords(true, 'page');
+            var cur = cm.cursorCoords(true, 'page');
             if (!cur) return;
             var kbH = _getKbHeight();
             var viewportH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -4334,6 +4739,11 @@
             var sim = document.querySelector('.simulation[style*="display: block"],.simulation[style*="display:block"]');
             if (!sim) return null;
             return sim.querySelector('.wrapper');
+        }
+        function _getActiveEditor() {
+            if (sqlEditor && sqlEditor.hasFocus()) return sqlEditor;
+            if (_playgroundEditor && _playgroundEditor.hasFocus()) return _playgroundEditor;
+            return sqlEditor;
         }
         function showKb() {
             if (!_isMobile() || !_kbPopup) return;
@@ -4416,8 +4826,8 @@
                 // Animações removidas para evitar distorção do teclado
             }
             function _execKey(btn) {
-                if (!sqlEditor) return;
-                var cm = sqlEditor;
+                var cm = _getActiveEditor();
+                if (!cm) return;
                 cm.focus();
                 var v = btn.getAttribute('data-v');
                 var action = btn.getAttribute('data-action');
@@ -4442,6 +4852,7 @@
                     cm.replaceSelection(' ', 'end');
                     playSound('space');
                     _scrollCursorIntoView();
+                    return;
                 } else if (action === 'enter') {
                     var cur = cm.getCursor();
                     var line = cm.getLine(cur.line);
@@ -4535,10 +4946,14 @@
             
             _kbPopup.addEventListener('touchstart', function(e) {
                 var btn = e.target.closest('.kb-btn');
-                if (!btn || !sqlEditor) return;
+                if (!btn || !_getActiveEditor()) return;
                 
                 // Se for o botão de espaço, preparar para deslize
                 if (btn.classList.contains('kb-btn-space')) {
+                    btn.classList.add('kb-active');
+                    _execKey(btn);
+                    _startRepeat(btn);
+                    var cm = _getActiveEditor();
                     _spaceSlideData = {
                         startX: e.touches[0].clientX,
                         startY: e.touches[0].clientY,
@@ -4552,17 +4967,19 @@
                         var currentX = moveEvent.touches[0].clientX;
                         var deltaX = currentX - _spaceSlideData.lastX;
                         var totalDelta = currentX - _spaceSlideData.startX;
+                        var cm2 = _getActiveEditor();
+                        if (!cm2) return;
                         
                         // Se deslizar mais de 30px, executar ação
                         if (Math.abs(totalDelta) > 30) {
                             if (deltaX > 0) {
                                 // Deslizar para DIREITA = mover cursor para DIREITA
-                                sqlEditor.execCommand('goCharRight');
+                                cm2.execCommand('goCharRight');
                                 playSound('click');
                                 _scrollCursorIntoView();
                             } else if (deltaX < 0) {
                                 // Deslizar para ESQUERDA = mover cursor para ESQUERDA
-                                sqlEditor.execCommand('goCharLeft');
+                                cm2.execCommand('goCharLeft');
                                 playSound('click');
                                 _scrollCursorIntoView();
                             }
@@ -4612,18 +5029,25 @@
         function _isEditorOrKeyboardTarget(target) {
             if (!target) return false;
             if (_kbPopup && _kbPopup.contains(target)) return true;
-            if (sqlEditor) {
-                var wrap = sqlEditor.getWrapperElement();
-                if (wrap && wrap.contains(target)) return true;
+            var editors = [sqlEditor, _playgroundEditor];
+            for (var i = 0; i < editors.length; i++) {
+                if (editors[i]) {
+                    var wrap = editors[i].getWrapperElement();
+                    if (wrap && wrap.contains(target)) return true;
+                }
             }
             return false;
+        }
+        function _blurActiveEditor() {
+            var cm = _getActiveEditor();
+            if (cm) cm.blur();
         }
         function _hideKbFromOutside(e) {
             if (!_isMobile() || !_isKbOpen()) return;
             if (Date.now() - _kbJustOpened < 250) return;
             if (_isEditorOrKeyboardTarget(e.target)) return;
             hideKb(false);
-            if (sqlEditor) sqlEditor.blur();
+            _blurActiveEditor();
         }
         document.addEventListener('touchstart', _hideKbFromOutside, { capture: true, passive: true });
         document.addEventListener('mousedown', _hideKbFromOutside, true);
@@ -4635,7 +5059,7 @@
             }
             if (_kbHistoryArmed || _isKbOpen()) {
                 hideKb(true);
-                if (sqlEditor) sqlEditor.blur();
+                _blurActiveEditor();
             }
         });
         if (_kbBackdrop) {
@@ -4643,12 +5067,12 @@
                 e.preventDefault();
                 if (Date.now() - _kbJustOpened < 400) return;
                 hideKb();
-                if (sqlEditor) sqlEditor.blur();
+                _blurActiveEditor();
             }, { passive: false });
             _kbBackdrop.addEventListener('click', function(e) {
                 if (Date.now() - _kbJustOpened < 400) return;
                 hideKb();
-                if (sqlEditor) sqlEditor.blur();
+                _blurActiveEditor();
             });
         }
         if (sqlEditor) {
@@ -4719,6 +5143,49 @@
                 }, 0);
             });
         }
+        // Playground editor — mesmos handlers do teclado virtual
+        if (_playgroundEditor) {
+            var _pgWrap = _playgroundEditor.getWrapperElement();
+            if (_pgWrap) {
+                var _pgTouchData = null;
+                var _pgTouchMoveHandler = null;
+                _pgWrap.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                    if (_isMobile()) {
+                        _pgTouchData = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, moved: false };
+                        _pgTouchMoveHandler = function() {
+                            if (!_pgTouchData) return;
+                            var cx = event.touches[0].clientX, cy = event.touches[0].clientY;
+                            if (Math.abs(cx - _pgTouchData.startX) > 20 || Math.abs(cy - _pgTouchData.startY) > 20)
+                                _pgTouchData.moved = true;
+                        };
+                        _pgWrap.addEventListener('touchmove', _pgTouchMoveHandler, { passive: true });
+                    }
+                }, { passive: true });
+                _pgWrap.addEventListener('touchend', function() {
+                    if (!_isMobile()) return;
+                    if (_pgTouchMoveHandler) _pgWrap.removeEventListener('touchmove', _pgTouchMoveHandler);
+                    if (_pgTouchData && !_pgTouchData.moved) {
+                        _playgroundEditor.focus();
+                        _playgroundEditor.refresh();
+                        if (!_kbPopup.classList.contains('kb-show')) showKb();
+                    }
+                    _pgTouchData = null;
+                }, { passive: true });
+                _pgWrap.addEventListener('touchcancel', function() {
+                    if (_pgTouchMoveHandler) _pgWrap.removeEventListener('touchmove', _pgTouchMoveHandler);
+                    _pgTouchData = null;
+                }, { passive: true });
+            }
+            _playgroundEditor.on('focus', function() { if (_isMobile()) showKb(); });
+            _playgroundEditor.on('blur', function() {
+                if (_isMobile()) setTimeout(function() {
+                    var active = document.activeElement;
+                    if (_isEditorOrKeyboardTarget(active)) return;
+                    hideKb(false);
+                }, 0);
+            });
+        }
         window.addEventListener('resize', _refreshKbLayout);
         if (window.visualViewport) window.visualViewport.addEventListener('resize', _refreshKbLayout);
 
@@ -4760,17 +5227,17 @@
             if (_kbShift === 1) { _kbShift = 0; _updateShiftVisual(); }
         }
         function _scrollCursorIntoView() {
-            if (!sqlEditor) return;
-            sqlEditor.scrollIntoView(sqlEditor.getCursor(), 28);
-            updateEditorHeight();
-            var cur = sqlEditor.cursorCoords(true, 'local');
-            var scrollEl = sqlEditor.getScrollInfo();
-            var editorEl = sqlEditor.getWrapperElement();
+            var cm = _getActiveEditor();
+            if (!cm) return;
+            cm.scrollIntoView(cm.getCursor(), 28);
+            updateEditorHeight(cm);
+            var cur = cm.cursorCoords(true, 'local');
+            var scrollEl = cm.getScrollInfo();
             var padding = 40;
             if (cur.left < scrollEl.left + padding) {
-                sqlEditor.scrollTo(null, scrollEl.left - padding);
+                cm.scrollTo(null, scrollEl.left - padding);
             } else if (cur.left > scrollEl.left + scrollEl.clientWidth - padding) {
-                sqlEditor.scrollTo(null, scrollEl.left + (cur.left - scrollEl.left - scrollEl.clientWidth + padding));
+                cm.scrollTo(null, scrollEl.left + (cur.left - scrollEl.left - scrollEl.clientWidth + padding));
             }
             _schedulePositionKb();
         }
@@ -4811,14 +5278,21 @@
             });
 
             var hoverEls = 'a, button, .btn-exec, .btn-start, .schema-panel h4, .challenge-item, select, .nav-select, .nav-btn-pratique, .nav-btn-playground, .home-card, .col-insertable, .tbl-name';
+            var linkEls = 'a, [onclick], [role="button"], .btn-exec, .btn-start, .btn-hint, .challenge-item, .nav-btn-pratique, .nav-btn-playground, .pg-ts-item, .pg-ts-toggle, .schema-panel h4, .tbl-name, .col-insertable';
             document.addEventListener('mouseover', function(e) {
                 if (e.target.closest(hoverEls)) {
                     arrow.classList.add('hovering');
+                }
+                if (e.target.closest(linkEls)) {
+                    arrow.classList.add('link-hover');
                 }
             });
             document.addEventListener('mouseout', function(e) {
                 if (e.target.closest(hoverEls)) {
                     arrow.classList.remove('hovering');
+                }
+                if (e.target.closest(linkEls)) {
+                    arrow.classList.remove('link-hover');
                 }
             });
 
@@ -4867,7 +5341,6 @@
             }
         })();
     </script>
-    <div class="footer">Feito por <strong>Wagner Aick</strong> &#10084;</div>
+    <div class="footer">Feito por <strong>Wagner Aick</strong> <span style="vertical-align:-1px;font-size:.7rem;">&#10084;</span> | <a href="https://github.com/aickwagner" target="_blank" rel="noopener" style="color:var(--hl-purple);text-decoration:underline;text-underline-offset:2px;"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px;text-decoration:none;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><br><a href="https://github.com/aickwagner/SQL-NA-PRATICA" target="_blank" rel="noopener" style="color:var(--hl-cyan);text-decoration:underline;text-underline-offset:2px;"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px;text-decoration:none;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Repositório</a></div>
 </body>
 </html>
-
