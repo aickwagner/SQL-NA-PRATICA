@@ -185,7 +185,7 @@
             width: 100%; padding: 0 12px 0 0; font-size: .48rem; font-family: 'Press Start 2P', monospace;
             background: rgba(121,192,255,.06); color: var(--hl-cyan);
             border: 1px solid var(--border); cursor: pointer;
-            text-align: left; transition: background .15s;
+            text-align: left; transition: background .15s; line-height: 1.8;
             display: flex; align-items: center; height: 36px;
         }
         .pg-footer-btn:hover { background: rgba(121,192,255,.15); }
@@ -351,13 +351,94 @@
         @keyframes resultGlow { 0%,100%{ border-color: var(--hl-green); } 50%{ border-color: var(--hl-yellow); } }
         .glow-result { animation: resultGlow .5s step-end 4; border-color: var(--hl-green) !important; }
 
-        .sim-row { display: flex; gap: 16px; min-width: 0; width: 100%; justify-content: center; }
+        .sim-row { display: flex; gap: 28px; min-width: 0; width: 100%; justify-content: center; }
         .sim-row .table-panel { flex: 1; }
+        .sim-row .table-panel[id^="res-"] { margin-left: 32px; margin-top: 0; }
+        .wrapper > .table-panel[id^="res-"] { margin-top: 28px; }
         .sim-row .table-panel.acumulador { flex: 0 0 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .acc-label { font-size: .45rem; letter-spacing: 2px; text-transform: uppercase; opacity: .5; margin-bottom: 6px; }
         .acc-value { font-size: 1.5rem; font-weight: 400; color: var(--hl-cyan); transition: color .15s; }
         .acc-value.highlight { color: var(--hl-yellow); }
         .acc-detail { font-size: .5rem; margin-top: 4px; opacity: .6; }
+
+        .db-console {
+            width: 280px;
+            border-left: 2px solid var(--border);
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .db-console-header {
+            padding: 8px 12px;
+            border-bottom: 2px solid var(--border);
+            background: var(--panel-bg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .db-console-header .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .db-console-header .dot-red { background: var(--hl-pink); }
+        .db-console-header .dot-yellow { background: var(--hl-yellow); }
+        .db-console-header .dot-green { background: var(--hl-green); }
+        .db-console-header span {
+            font-size: .42rem;
+            font-weight: 700;
+            color: var(--hl-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .db-console-body {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--hl-green);
+            background: var(--bg-color);
+            padding: 10px 12px;
+            overflow-y: auto;
+            min-height: 160px;
+            position: relative;
+        }
+        .db-console-body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,.08) 2px,
+                rgba(0,0,0,.08) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        .db-console-body::-webkit-scrollbar { width: 6px; }
+        .db-console-body::-webkit-scrollbar-track { background: var(--bg-color); }
+        .db-console-body::-webkit-scrollbar-thumb { background: var(--border); }
+        .db-console-body::-webkit-scrollbar-thumb:hover { background: var(--hl-cyan); }
+        .db-console-line {
+            margin-top: 4px;
+            padding: 2px 0;
+            position: relative;
+            z-index: 2;
+        }
+        .db-console-line .prompt { color: var(--hl-cyan); }
+        .db-console-line.success { color: var(--hl-green); }
+        .db-console-line.error { color: var(--hl-pink); font-weight: 700; }
+        .db-console-line.info { color: var(--hl-yellow); }
+        .db-console-cursor {
+            display: inline-block;
+            width: 7px;
+            height: 14px;
+            background: var(--hl-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+            position: relative;
+            z-index: 2;
+        }
+        @keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0; } }
 
         .challenge-layout { display: flex; gap: 16px; align-items: flex-start; }
         .challenge-sidebar { flex: 0 0 260px; max-height: calc(100vh - 180px); display: flex; flex-direction: column; gap: 0; background: var(--panel-bg); border: 2px solid var(--border); border-radius: 0; box-shadow: 4px 4px 0 rgba(0,0,0,.3); overflow: hidden; }
@@ -384,11 +465,156 @@
         #playground-schemas { margin-top: 20px; }
         #playground-schemas .schema-panel { margin-bottom: 12px; }
         #playground-schemas .pg-schema-db-header { box-shadow: 4px 4px 0 rgba(0,0,0,.3); }
-        #playground-result { margin-top: 16px; animation: pgSlideIn .25s ease-out; }
-        #playground-row-count { font-size: .4rem; padding: 8px 12px; color: var(--hl-cyan); opacity: .8; }
+        #playground-result { margin-top: 16px; }
+        #playground-result-stack { display: flex; flex-direction: column; gap: 8px; }
+        .pg-result-block { background: rgba(0,0,0,.2); border-radius: 0; overflow: hidden; border: 1px solid var(--border); }
+        .pg-result-block:first-child { border-color: var(--hl-cyan); }
+        .pg-result-sql { font-size: .6rem; padding: 10px 14px; background: rgba(255,255,255,.04); color: var(--hl-yellow); font-family: var(--pixel-font); word-break: break-all; border-bottom: 2px solid var(--border); letter-spacing: .5px; }
+        .pg-result-block table { width: 100%; border-collapse: collapse; font-size: .5rem; }
+        .pg-result-block table th { font-size: .45rem; padding: 5px 8px 8px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .4px; }
+        .pg-result-block table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: .5rem; }
+        .pg-result-block table tr:last-child td { border-bottom: none; }
+        .pg-result-block .pass, .pg-result-block .fail { padding: 8px 12px; font-size: .5rem; }
+        .pg-result-block .fail { color: var(--kw-pink); }
+        #playground-row-count { font-size: .5rem; padding: 8px 12px; color: var(--hl-cyan); opacity: .8; }
+
+        .desc-output { background: var(--panel-bg); border: 2px solid var(--border); overflow: hidden; }
+        .desc-output table { width: 100%; border-collapse: collapse; }
+        .desc-output th { font-size: .48rem; padding: 8px 14px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); background: rgba(121,192,255,0.06); text-transform: uppercase; letter-spacing: .8px; font-weight: 400; }
+        .desc-output td { font-size: .52rem; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+        .desc-output tr:last-child td { border-bottom: none; }
+        .desc-output tr:hover td { background: rgba(121,192,255,0.06); }
+        .desc-output .col-name { color: var(--hl-cyan); font-weight: 700; }
+        .desc-output .col-type { color: var(--hl-pink); }
+        .desc-output .col-pk { color: var(--hl-cyan); font-weight: 700; text-shadow: 0 0 6px rgba(121,192,255,.4); }
+        .desc-output .col-fk { color: var(--hl-yellow); font-weight: 700; text-shadow: 0 0 6px rgba(227,179,65,.4); }
+        .desc-output .col-null { opacity: .5; }
+        .desc-output .col-dash { opacity: .25; }
+
         @keyframes pgSlideIn {
             0% { opacity: 0; transform: translateY(-6px); }
             100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pgPopBounce {
+            0% { opacity: 0; transform: translateY(40px) scale(.7); }
+            50% { opacity: 1; transform: translateY(-8px) scale(1.08); }
+            70% { transform: translateY(3px) scale(.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pgPopGlow {
+            0%,100% { box-shadow: 0 0 8px rgba(126,231,135,.25), 4px 4px 0 rgba(0,0,0,.4); }
+            50% { box-shadow: 0 0 20px rgba(126,231,135,.5), 4px 4px 0 rgba(0,0,0,.4); }
+        }
+        @keyframes pgPopGlowError {
+            0%,100% { box-shadow: 0 0 8px rgba(255,107,107,.25), 4px 4px 0 rgba(0,0,0,.4); }
+            50% { box-shadow: 0 0 20px rgba(255,107,107,.5), 4px 4px 0 rgba(0,0,0,.4); }
+        }
+        @keyframes pgPopGlowMixed {
+            0%,100% { box-shadow: 0 0 8px rgba(227,179,65,.25), 4px 4px 0 rgba(0,0,0,.4); }
+            50% { box-shadow: 0 0 20px rgba(227,179,65,.5), 4px 4px 0 rgba(0,0,0,.4); }
+        }
+        @keyframes pgPopExit {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(30px) scale(.8); }
+        }
+        @keyframes pgPopStar {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+            100% { opacity: 0; transform: scale(0) rotate(360deg); }
+        }
+        @keyframes pgPixelRain {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(60px); }
+        }
+        #pg-popup {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+        }
+        #pg-popup.show {
+            animation: pgPopBounce .45s cubic-bezier(.22,1,.36,1) forwards;
+            pointer-events: auto;
+        }
+        #pg-popup.exit {
+            animation: pgPopExit .35s ease-in forwards;
+            pointer-events: none;
+        }
+        .pg-popup-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            padding: 12px 20px;
+            font-family: var(--pixel-font);
+            position: relative;
+            overflow: hidden;
+        }
+        .pg-popup-inner.all-ok {
+            border-color: var(--hl-green);
+            animation: pgPopGlow 1.5s ease-in-out infinite;
+        }
+        .pg-popup-inner.all-fail {
+            border-color: var(--hl-pink);
+            animation: pgPopGlowError 1.5s ease-in-out infinite;
+        }
+        .pg-popup-inner.mixed {
+            border-color: var(--hl-yellow);
+            animation: pgPopGlowMixed 1.5s ease-in-out infinite;
+        }
+        .pg-popup-icon {
+            font-size: 1.1rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .pg-popup-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .pg-popup-title {
+            font-size: .42rem;
+            color: var(--text-main);
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+        .pg-popup-detail {
+            font-size: .34rem;
+            color: var(--hl-cyan);
+            opacity: .85;
+            letter-spacing: .3px;
+            white-space: nowrap;
+        }
+        .pg-popup-detail .ok { color: var(--hl-green); }
+        .pg-popup-detail .err { color: var(--hl-pink); }
+        .pg-popup-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--hl-cyan);
+            transition: width 3s linear;
+        }
+        .pg-popup-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .pg-popup-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            animation: pgPixelRain .6s ease-out forwards;
+        }
+        .pg-popup-star {
+            position: absolute;
+            font-size: .5rem;
+            animation: pgPopStar .7s ease-out forwards;
         }
         .schema-panel-content { display: block; transition: all 0.15s; padding: 0; }
         .schema-panel.collapsed .schema-panel-content { display: none; }
@@ -490,7 +716,7 @@
             transform: translateY(100%); transition: transform .24s cubic-bezier(.2,.9,.2,1.05), visibility 0s .24s;
             will-change: transform; visibility: hidden;
             -webkit-user-select: none; -webkit-touch-callout: none;
-            max-height: min(50vh, 360px); overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; touch-action: none;
+            max-height: min(50vh, 360px); overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; touch-action: pan-y;
             image-rendering: pixelated;
         }
         .sql-keyboard.kb-show { transform: translateY(0); visibility: visible; transition: transform .24s cubic-bezier(.2,.9,.2,1.05), visibility 0s 0s; }
@@ -635,9 +861,9 @@
         .result-panel h4.ok { color: var(--hl-green); }
         .result-panel h4.err { color: var(--hl-pink); }
         .result-panel h4.info { color: var(--hl-cyan); }
-        .result-panel table { font-size: .5rem; width: 100%; border-collapse: collapse; }
-        .result-panel th { font-size: .42rem; padding: 6px 10px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .5px; background: rgba(121,192,255,0.05); }
-        .result-panel td { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+        .result-panel table { font-size: .6rem; width: 100%; border-collapse: collapse; }
+        .result-panel th { font-size: .5rem; padding: 8px 12px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .5px; background: rgba(121,192,255,0.05); }
+        .result-panel td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
         .result-panel tr:hover td { background: rgba(121,192,255,0.08); }
         .result-panel tr:last-child td { border-bottom: none; }
         .error-msg { color: var(--hl-pink); font-size: .5rem; margin-top: 6px; }
@@ -816,8 +1042,8 @@
 
             /* Tables */
             .tables-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .tables-row { gap: 6px; }
-            .sim-row { gap: 6px; }
+            .tables-row { gap: 16px; }
+            .sim-row { gap: 16px; }
             .table-panel { padding: 6px 5px; min-width: 0; flex: 1; }
             .table-panel table { font-size: .42rem; min-width: 0; }
             .table-panel th { font-size: .38rem; padding: 3px 4px; white-space: nowrap; letter-spacing: 0; }
@@ -1108,6 +1334,31 @@
                     <option value="" disabled selected>Combinação</option>
                     <option value="union">UNION</option>
                     <option value="union-all">UNION ALL</option>
+                    <option value="intersect">INTERSECT</option>
+                    <option value="except">EXCEPT</option>
+                </select>
+                <select class="nav-select" onchange="switchTab(this.value)">
+                    <option value="" disabled selected>Avançado</option>
+                    <option value="case-when">CASE WHEN</option>
+                    <option value="distinct">DISTINCT</option>
+                    <option value="is-null">IS NULL</option>
+                    <option value="having">HAVING</option>
+                    <option value="subquery-in">SUBQUERY IN</option>
+                    <option value="subquery-scalar">SUBQUERY ESCALAR</option>
+                    <option value="exists">EXISTS</option>
+                    <option value="self-join">SELF JOIN</option>
+                </select>
+                <select class="nav-select" onchange="switchTab(this.value)">
+                    <option value="" disabled selected>DDL / Restrições</option>
+                    <option value="constraints">CONSTRAINTS</option>
+                    <option value="foreign-key">FOREIGN KEY</option>
+                    <option value="limit-offset">LIMIT / OFFSET</option>
+                </select>
+                <select class="nav-select" onchange="switchTab(this.value)">
+                    <option value="" disabled selected>Window Functions</option>
+                    <option value="row-number">ROW_NUMBER</option>
+                    <option value="rank">RANK</option>
+                    <option value="laglead">LAG / LEAD</option>
                 </select>
             </div>
         </div>
@@ -2352,6 +2603,187 @@
         </div>
     </div><div class="btn-row"><button class="btn-run" onclick="runSim('self-join')">Iniciar</button></div></div>
 
+    <!-- ============ CONSTRAINTS ============ -->
+    <div class="simulation" id="sim-constraints"><div class="join-description wrapper">
+        <strong>CONSTRAINTS</strong> são restrições impostas aos dados de uma tabela. As principais são: <strong>NOT NULL</strong> (obriga um valor), <strong>UNIQUE</strong> (evita duplicados) e <strong>CHECK</strong> (valida uma condição).
+    </div><div class="wrapper" id="app-constraints">
+        <div class="sim-row">
+            <div class="table-panel"><div class="table-title">TABELA DE DESTINO: <span class="kw-cyan">CLIENTES</span></div>
+                <table class="tbl" data-tbl="co-d"><thead><tr><th>id</th><th>nome</th><th>email</th><th>idade</th></tr></thead>
+                    <tbody>
+                        <!-- Vazia inicialmente, será populada com as inserções bem-sucedidas -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="db-console" id="log-constraints">
+                <div class="db-console-header">
+                    <div class="dot dot-red"></div>
+                    <div class="dot dot-yellow"></div>
+                    <div class="dot dot-green"></div>
+                    <span>Console SQL</span>
+                </div>
+                <div class="db-console-body" id="co-console">
+                    <div class="db-console-line info">>-- Aguardando instruções...</div><span class="db-console-cursor"></span>
+                </div>
+            </div>
+        </div>
+        <div class="code-panel" id="code-constraints">
+            <div class="code-line" data-line="c"><span class="kw-cyan">CREATE TABLE</span> clientes (</div>
+            <div class="code-line" data-line="id">&nbsp;&nbsp;&nbsp;&nbsp;id <span class="kw-pink">INT PRIMARY KEY</span>,</div>
+            <div class="code-line" data-line="n">&nbsp;&nbsp;&nbsp;&nbsp;nome <span class="kw-pink">VARCHAR</span>(50) <span class="kw-purple">NOT NULL</span>,</div>
+            <div class="code-line" data-line="e">&nbsp;&nbsp;&nbsp;&nbsp;email <span class="kw-pink">VARCHAR</span>(50) <span class="kw-purple">UNIQUE</span>,</div>
+            <div class="code-line" data-line="i">&nbsp;&nbsp;&nbsp;&nbsp;idade <span class="kw-pink">INT</span> <span class="kw-purple">CHECK</span> (idade &gt;= 18)</div>
+            <div class="code-line" data-line="c2">);</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('constraints')">Iniciar</button></div></div>
+
+    <!-- ============ FOREIGN KEY ============ -->
+    <div class="simulation" id="sim-foreign-key"><div class="join-description wrapper">
+        A <strong>FOREIGN KEY</strong> (Chave Estrangeira) garante a <strong>Integridade Referencial</strong>. Ela impede que um registro filho aponte para um registro pai que não existe na tabela referenciada.
+    </div><div class="wrapper" id="app-foreign-key">
+        <div class="sim-row">
+            <div class="table-panel" style="flex: 1;"><div class="table-title">TABELA PAI: <span class="kw-cyan">DEPARTAMENTOS</span></div>
+                <table class="tbl" data-tbl="fk-p"><thead><tr><th>id</th><th>nome</th></tr></thead>
+                    <tbody>
+                        <tr data-id="1"><td>1</td><td>Vendas</td></tr>
+                        <tr data-id="2"><td>2</td><td>TI</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-panel" style="flex: 1.2;"><div class="table-title">TABELA FILHO: <span class="kw-pink">FUNCIONÁRIOS</span></div>
+                <table class="tbl" data-tbl="fk-f"><thead><tr><th>id</th><th>nome</th><th>depto_id</th></tr></thead>
+                    <tbody>
+                        <!-- Vazio, será populado -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="db-console" id="log-foreign-key">
+                <div class="db-console-header">
+                    <div class="dot dot-red"></div>
+                    <div class="dot dot-yellow"></div>
+                    <div class="dot dot-green"></div>
+                    <span>Console SQL</span>
+                </div>
+                <div class="db-console-body" id="fk-console">
+                    <div class="db-console-line info">>-- Aguardando instruções...</div><span class="db-console-cursor"></span>
+                </div>
+            </div>
+        </div>
+        <div class="code-panel" id="code-foreign-key">
+            <div class="code-line" data-line="s"><span class="kw-cyan">ALTER TABLE</span> funcionários</div>
+            <div class="code-line" data-line="fk"><span class="kw-pink">ADD CONSTRAINT</span> fk_depto <span class="kw-purple">FOREIGN KEY</span> (depto_id)</div>
+            <div class="code-line" data-line="r"><span class="kw-purple">REFERENCES</span> departamentos(id);</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('foreign-key')">Iniciar</button></div></div>
+
+    <!-- ============ LIMIT OFFSET ============ -->
+    <div class="simulation" id="sim-limit-offset"><div class="join-description wrapper">
+        <strong>LIMIT</strong> define a quantidade máxima de registros que serão retornados. <strong>OFFSET</strong> define quantos registros serão ignorados a partir do início antes de começar a retornar.
+    </div><div class="wrapper" id="app-limit-offset">
+        <div class="sim-row">
+            <div class="table-panel"><div class="table-title">TABELA: <span class="kw-cyan">PRODUTOS</span></div>
+                <table class="tbl" data-tbl="lo-d"><thead><tr><th>id</th><th>nome</th><th>preço</th></tr></thead>
+                    <tbody>
+                        <tr data-id="1"><td>1</td><td>Celular</td><td>1500</td></tr>
+                        <tr data-id="2"><td>2</td><td>Câmera</td><td>1200</td></tr>
+                        <tr data-id="3"><td>3</td><td>Teclado</td><td>250</td></tr>
+                        <tr data-id="4"><td>4</td><td>Mouse</td><td>150</td></tr>
+                        <tr data-id="5"><td>5</td><td>Monitor</td><td>800</td></tr>
+                        <tr data-id="6"><td>6</td><td>Fone</td><td>100</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-panel" id="res-limit-offset" style="display:none"><div class="table-title">RESULTADO (LIMIT 3 OFFSET 2)</div>
+                <table class="tbl" data-tbl="lo-r"><thead><tr><th>nome</th><th>preço</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="code-panel" id="code-limit-offset">
+            <div class="code-line" data-line="s"><span class="kw-cyan">SELECT</span> nome, preço <span class="kw-pink">FROM</span> produtos</div>
+            <div class="code-line" data-line="o"><span class="kw-purple">OFFSET</span> 2</div>
+            <div class="code-line" data-line="l"><span class="kw-purple">LIMIT</span> 3;</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('limit-offset')">Iniciar</button></div></div>
+
+    <!-- ============ ROW_NUMBER ============ -->
+    <div class="simulation" id="sim-row-number"><div class="join-description wrapper">
+        A função <strong>ROW_NUMBER()</strong> atribui um número sequencial exclusivo para cada linha em uma partição de resultado. <strong>PARTITION BY</strong> reinicia a contagem em cada grupo, e <strong>ORDER BY</strong> define a ordem dentro do grupo.
+    </div><div class="wrapper" id="app-row-number">
+        <div class="sim-row">
+            <div class="table-panel"><div class="table-title">TABELA: <span class="kw-cyan">FUNCIONÁRIOS</span></div>
+                <table class="tbl" data-tbl="rn-d"><thead><tr><th>nome</th><th>depto</th><th>salário</th></tr></thead>
+                    <tbody>
+                        <tr data-id="1"><td>Ana</td><td>TI</td><td>8000</td></tr>
+                        <tr data-id="2"><td>Carlos</td><td>TI</td><td>6000</td></tr>
+                        <tr data-id="3"><td>Bruno</td><td>Vendas</td><td>7000</td></tr>
+                        <tr data-id="4"><td>Diana</td><td>Vendas</td><td>5000</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-panel" id="res-row-number" style="display:none"><div class="table-title">RESULTADO DO ROW_NUMBER()</div>
+                <table class="tbl" data-tbl="rn-r"><thead><tr><th>nome</th><th>depto</th><th>salário</th><th>num_linha</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="code-panel" id="code-row-number">
+            <div class="code-line" data-line="s"><span class="kw-cyan">SELECT</span> nome, depto, salário,</div>
+            <div class="code-line" data-line="w"><span class="kw-purple">ROW_NUMBER</span>() <span class="kw-pink">OVER</span> (</div>
+            <div class="code-line" data-line="p">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw-pink">PARTITION BY</span> depto</div>
+            <div class="code-line" data-line="o">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw-pink">ORDER BY</span> salário <span class="kw-pink">DESC</span></div>
+            <div class="code-line" data-line="w2">) <span class="kw-cyan">AS</span> num_linha</div>
+            <div class="code-line" data-line="f"><span class="kw-pink">FROM</span> funcionários;</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('row-number')">Iniciar</button></div></div>
+
+    <!-- ============ RANK ============ -->
+    <div class="simulation" id="sim-rank"><div class="join-description wrapper">
+        A função <strong>RANK()</strong> atribui uma classificação a cada linha dentro de uma partição. Diferente de ROW_NUMBER, se houver empates, eles recebem o mesmo valor, e o próximo valor de classificação terá um "salto" correspondente ao número de linhas empatadas.
+    </div><div class="wrapper" id="app-rank">
+        <div class="sim-row">
+            <div class="table-panel"><div class="table-title">TABELA: <span class="kw-cyan">PONTUAÇÕES</span></div>
+                <table class="tbl" data-tbl="rk-d"><thead><tr><th>nome</th><th>pontos</th></tr></thead>
+                    <tbody>
+                        <tr data-id="1"><td>Ana</td><td>100</td></tr>
+                        <tr data-id="2"><td>Bruno</td><td>90</td></tr>
+                        <tr data-id="3"><td>Carlos</td><td>90</td></tr>
+                        <tr data-id="4"><td>Diana</td><td>80</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-panel" id="res-rank" style="display:none"><div class="table-title">RESULTADO DO RANK()</div>
+                <table class="tbl" data-tbl="rk-r"><thead><tr><th>nome</th><th>pontos</th><th>posição</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="code-panel" id="code-rank">
+            <div class="code-line" data-line="s"><span class="kw-cyan">SELECT</span> nome, pontos,</div>
+            <div class="code-line" data-line="w"><span class="kw-purple">RANK</span>() <span class="kw-pink">OVER</span> (<span class="kw-pink">ORDER BY</span> pontos <span class="kw-pink">DESC</span>) <span class="kw-cyan">AS</span> posição</div>
+            <div class="code-line" data-line="f"><span class="kw-pink">FROM</span> pontuações;</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('rank')">Iniciar</button></div></div>
+
+    <!-- ============ LAG LEAD ============ -->
+    <div class="simulation" id="sim-laglead"><div class="join-description wrapper">
+        As funções <strong>LAG()</strong> e <strong>LEAD()</strong> permitem acessar dados de uma linha anterior (LAG) ou de uma linha posterior (LEAD) sem a necessidade de um self join. São essenciais para comparar valores ao longo do tempo.
+    </div><div class="wrapper" id="app-laglead">
+        <div class="sim-row">
+            <div class="table-panel"><div class="table-title">TABELA: <span class="kw-cyan">VENDAS_MENSAIS</span></div>
+                <table class="tbl" data-tbl="ll-d"><thead><tr><th>mês</th><th>vendas</th></tr></thead>
+                    <tbody>
+                        <tr data-id="1"><td>Janeiro</td><td>150</td></tr>
+                        <tr data-id="2"><td>Fevereiro</td><td>180</td></tr>
+                        <tr data-id="3"><td>Março</td><td>160</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-panel" id="res-laglead" style="display:none"><div class="table-title">RESULTADO DO LAG()</div>
+                <table class="tbl" data-tbl="ll-r"><thead><tr><th>mês</th><th>vendas</th><th>mês_anterior</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="code-panel" id="code-laglead">
+            <div class="code-line" data-line="s"><span class="kw-cyan">SELECT</span> mês, vendas,</div>
+            <div class="code-line" data-line="w"><span class="kw-purple">LAG</span>(vendas, 1) <span class="kw-pink">OVER</span> (<span class="kw-pink">ORDER BY</span> id) <span class="kw-cyan">AS</span> mês_anterior</div>
+            <div class="code-line" data-line="f"><span class="kw-pink">FROM</span> vendas_mensais;</div>
+        </div>
+    </div><div class="btn-row"><button class="btn-run" onclick="runSim('laglead')">Iniciar</button></div></div>
+
     <!-- ============ DESAFIOS ============ -->
     <div class="simulation" id="sim-challenge"><div class="join-description wrapper">
         Escreva consultas SQL e teste seus conhecimentos. Escolha um desafio ao lado e escreva a query na caixa abaixo.
@@ -2435,11 +2867,12 @@
                                 </div>
                             </div>
                             <div class="result-panel no-collapse" id="playground-result" style="display:none">
-                                <h4 id="playground-result-msg"></h4>
-                                <div id="playground-result-table">
+                                <div id="playground-result-stack"></div>
+                                <div id="playground-row-count" style="font-size:.4rem;padding:8px 12px;opacity:.6;"></div>
+                                <div style="display:none">
+                                    <h4 id="playground-result-msg"></h4>
                                     <table><thead id="playground-result-head"></thead><tbody id="playground-result-body"></tbody></table>
                                 </div>
-                                <div id="playground-row-count" style="font-size:.4rem;padding:8px 12px;opacity:.6;"></div>
                             </div>
                             <div id="playground-schemas"></div>
                         </div>
@@ -2500,6 +2933,7 @@
         document.addEventListener('touchstart', unlockAudio, { once: true });
         document.addEventListener('click', unlockAudio, { once: true });
         function playSound(type) {
+            if (!_isBatchLeader) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const t = audioCtx.currentTime;
             // Helper: cria um oscilador com envelope
@@ -2591,12 +3025,11 @@
             if (skipAnimation) return r();
             setTimeout(r, ms);
         });
+        var _isBatchLeader = true;
         function getAnimDelayForRow(rowIdx, total) {
-            var maxDelay = 400, minDelay = 80;
-            var progress = total > 1 ? rowIdx / (total - 1) : 0;
-            var delay = minDelay + (maxDelay - minDelay) * Math.pow(0.03, progress);
-            soundVol = Math.max(0.15, delay / maxDelay);
-            return Math.round(delay);
+            soundVol = 0.7;
+            _isBatchLeader = true;
+            return 300;
         }
         function getSVG(id) { return document.getElementById('svg-'+id); }
         function drawLine(id, e1, e2, color, dashed) {
@@ -2632,9 +3065,16 @@
             var acc=document.getElementById('acc-'+id); if(acc) acc.style.display='flex';
             app.querySelectorAll('.table-panel,.acumulador').forEach(function(p){p.classList.remove('glow-result');});
         }
-        ['insert','delete','update','where-between','where-in','where-not2','group-by','order-by','date-year','date-month','date-day','date-format','date-diff'].forEach(function(id){ var el=document.getElementById('app-'+id); if(el) origHTML[id]=el.innerHTML; });
+        ['insert','delete','update','where-between','where-in','where-not2','group-by','order-by','date-year','date-month','date-day','date-format','date-diff','constraints','foreign-key','limit-offset','row-number','rank','laglead'].forEach(function(id){ var el=document.getElementById('app-'+id); if(el) origHTML[id]=el.innerHTML; });
 
-        const simOrder = ['inner', 'left', 'right', 'full', 'where', 'where-str', 'where-and', 'where-or', 'where-not', 'where-not2', 'where-between', 'where-in', 'where-like', 'min', 'max', 'sum', 'avg', 'count', 'insert', 'delete', 'update', 'group-by', 'order-by', 'date-year', 'date-month', 'date-day', 'date-format', 'date-diff'];
+        const simOrder = [
+            'inner', 'left', 'right', 'full', 'where', 'where-str', 'where-and', 'where-or', 'where-not', 'where-not2', 'where-between', 'where-in', 'where-like',
+            'min', 'max', 'sum', 'avg', 'count', 'insert', 'delete', 'update', 'group-by', 'order-by',
+            'date-year', 'date-month', 'date-day', 'date-format', 'date-diff',
+            'case-when', 'distinct', 'union', 'union-all', 'is-null', 'having',
+            'subquery-in', 'subquery-scalar', 'exists', 'self-join', 'intersect', 'except',
+            'constraints', 'foreign-key', 'limit-offset', 'row-number', 'rank', 'laglead'
+        ];
         
         function goToNextSim(currentId) {
             const index = simOrder.indexOf(currentId);
@@ -3373,8 +3813,8 @@
                 for(var j=0;j<dados.length-1-i;j++){
                     var compIdx=i*(dados.length-1)+j;
                     var compTotal=dados.length*(dados.length-1)/2;
-                    var d=Math.round(Math.max(60, 250 * Math.pow(0.1, compIdx/Math.max(compTotal-1,1))));
-                    soundVol = Math.max(0.15, d / 400);
+                    var d=300;
+                    soundVol = 0.7;
                     dados[j].row.classList.add('row-swap-a');
                     dados[j+1].row.classList.add('row-swap-b');
                     dados[j].cells[2].classList.add('row-current');
@@ -3397,7 +3837,7 @@
                 var posBadge='<span class="row-position">'+(ri+1)+'º</span> ';
                 var nr=document.createElement('tr'); nr.className='animated-row row-match';
                 nr.innerHTML='<td>'+posBadge+item.nome+'</td><td>'+item.preco+'</td>';
-                res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                 item.row.classList.remove('row-highlight');
             }
             if(arrow && arrow.parentNode) arrow.parentNode.removeChild(arrow);
@@ -3543,15 +3983,15 @@
                 var cells=r.querySelectorAll('td');
                 var salario=parseInt(cells[2].textContent,10);
                 cells[2].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 var faixa;
                 if(salario>=10000) faixa='Alto';
                 else if(salario>=5000) faixa='Médio';
                 else faixa='Baixo';
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                 var nr=document.createElement('tr'); nr.className='animated-row row-match';
                 nr.innerHTML='<td>'+cells[1].textContent+'</td><td>'+faixa+'</td>';
-                res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                 r.classList.remove('row-highlight','row-match');
                 cells[2].classList.remove('row-current');
             }
@@ -3573,18 +4013,18 @@
                 var cells=r.querySelectorAll('td');
                 var cat=cells[2].textContent;
                 cells[2].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(!seen[cat]){
                     seen[cat]=true;
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+cat+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25';
                     r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
                 cells[2].classList.remove('row-current');
@@ -3604,37 +4044,37 @@
             document.getElementById('res-'+id).style.display='block';
             var seen={};
             for(var ri=0;ri<rowsA.length;ri++){
-                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length+rowsB.length);
+                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length);
                 var val=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(!seen[val]){
                     seen[val]=true;
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+val+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
             }
-            hCode(id,'s2'); await sleep(getAnimDelayForRow(rowsA.length,rowsA.length+rowsB.length)*0.3);
+            hCode(id,'s2'); await sleep(getAnimDelayForRow(0,rowsB.length)*0.5);
             for(var ri=0;ri<rowsB.length;ri++){
-                var r=rowsB[ri], d=getAnimDelayForRow(rowsA.length+ri,rowsA.length+rowsB.length);
+                var r=rowsB[ri], d=getAnimDelayForRow(ri,rowsB.length);
                 var val=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(!seen[val]){
                     seen[val]=true;
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+val+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
             }
@@ -3652,24 +4092,24 @@
             hCode(id,'u'); await sleep(getAnimDelayForRow(0,rowsA.length)*0.3);
             document.getElementById('res-'+id).style.display='block';
             for(var ri=0;ri<rowsA.length;ri++){
-                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length+rowsB.length);
+                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length);
                 var val=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                 var nr=document.createElement('tr'); nr.className='animated-row row-match';
                 nr.innerHTML='<td>'+val+'</td>';
-                res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                 r.classList.remove('row-highlight','row-match');
             }
-            hCode(id,'s2'); await sleep(getAnimDelayForRow(rowsA.length,rowsA.length+rowsB.length)*0.3);
+            hCode(id,'s2'); await sleep(getAnimDelayForRow(0,rowsB.length)*0.5);
             for(var ri=0;ri<rowsB.length;ri++){
-                var r=rowsB[ri], d=getAnimDelayForRow(rowsA.length+ri,rowsA.length+rowsB.length);
+                var r=rowsB[ri], d=getAnimDelayForRow(ri,rowsB.length);
                 var val=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                 var nr=document.createElement('tr'); nr.className='animated-row row-match';
                 nr.innerHTML='<td>'+val+'</td>';
-                res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                 r.classList.remove('row-highlight','row-match');
             }
             hCode(id,'s');
@@ -3689,17 +4129,17 @@
                 var r=rows[ri], d=getAnimDelayForRow(ri,rows.length);
                 var cells=r.querySelectorAll('td');
                 cells[2].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 var isNull=cells[2].textContent==='NULL';
                 if(!isNull){
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+cells[1].textContent+'</td><td>'+cells[2].textContent+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
                 cells[2].classList.remove('row-current');
@@ -3724,15 +4164,15 @@
                 var valor=parseInt(cells[2].textContent,10);
                 cells[1].classList.add('row-current');
                 cells[2].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(!groups[cliente]) groups[cliente]=0;
                 groups[cliente]+=valor;
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                 r.classList.remove('row-highlight','row-match');
                 cells[1].classList.remove('row-current');
                 cells[2].classList.remove('row-current');
             }
-            hCode(id,'s'); await sleep(getAnimDelayForRow(0,rows.length)*0.3);
+            hCode(id,'s'); await sleep(getAnimDelayForRow(0,rows.length)*0.5);
             hCode(id,'h');
             var totalAll=0;
             Object.keys(groups).forEach(function(k){ totalAll+=groups[k]; });
@@ -3742,7 +4182,7 @@
                 if(groups[cliente]>400){
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+cliente+'</td><td>'+groups[cliente]+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                 }
             }
             hCode(id,'s');
@@ -3759,12 +4199,12 @@
             var subClientes=[];
             for(var ri=0;ri<subRows.length;ri++){
                 var r=subRows[ri], d=getAnimDelayForRow(ri,subRows.length);
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 subClientes.push(r.querySelectorAll('td')[0].textContent);
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                 r.classList.remove('row-highlight','row-match');
             }
-            hCode(id,'w'); await sleep(getAnimDelayForRow(0,rows.length)*0.3);
+            hCode(id,'w'); await sleep(getAnimDelayForRow(0,rows.length)*0.5);
             hCode(id,'w2');
             document.getElementById('res-'+id).style.display='block';
             for(var ri=0;ri<rows.length;ri++){
@@ -3772,16 +4212,16 @@
                 var cells=r.querySelectorAll('td');
                 var cliente=cells[1].textContent;
                 cells[1].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(subClientes.indexOf(cliente)!==-1){
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+cells[0].textContent+'</td><td>'+cells[1].textContent+'</td><td>'+cells[2].textContent+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
                 cells[1].classList.remove('row-current');
@@ -3802,7 +4242,7 @@
                 var cells=rows[ri].querySelectorAll('td');
                 cells[2].classList.add('row-current');
                 rows[ri].classList.add('row-highlight'); playSound('scan');
-                await sleep(getAnimDelayForRow(ri,rows.length)*0.5);
+                await sleep(getAnimDelayForRow(ri,rows.length)*0.8);
                 sum+=parseInt(cells[2].textContent,10);
                 rows[ri].classList.remove('row-highlight');
                 cells[2].classList.remove('row-current');
@@ -3817,16 +4257,16 @@
                 var cells=r.querySelectorAll('td');
                 var preco=parseInt(cells[2].textContent,10);
                 cells[2].classList.add('row-current');
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(preco>avg){
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+cells[1].textContent+'</td><td>'+cells[2].textContent+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.4);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
                 cells[2].classList.remove('row-current');
@@ -3842,29 +4282,29 @@
             var rowsB=Array.from(tbl(id,'ex-b').querySelectorAll('tbody tr'));
             var res=tbl(id,'ex-r').querySelector('tbody');
             hCode(id,'f'); await sleep(getAnimDelayForRow(0,rowsA.length));
-            hCode(id,'sq'); await sleep(getAnimDelayForRow(0,rowsA.length)*0.3);
+            hCode(id,'sq'); await sleep(getAnimDelayForRow(0,rowsA.length)*0.5);
             document.getElementById('res-'+id).style.display='block';
             for(var ri=0;ri<rowsA.length;ri++){
                 var rA=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length);
                 var idA=parseInt(rA.querySelectorAll('td')[0].textContent,10);
-                rA.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.4);
+                rA.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.6);
                 var found=false;
                 for(var bi=0;bi<rowsB.length;bi++){
                     var rB=rowsB[bi];
                     var cid=parseInt(rB.querySelectorAll('td')[1].textContent,10);
-                    rB.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.3);
-                    if(cid===idA){found=true; rB.classList.add('row-match'); playSound('match'); await sleep(d*0.2); rB.classList.remove('row-match');}
+                    rB.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                    if(cid===idA){found=true; rB.classList.add('row-match'); playSound('match'); await sleep(d*0.4); rB.classList.remove('row-match');}
                     rB.classList.remove('row-highlight');
                 }
                 if(found){
-                    rA.classList.add('row-match'); playSound('match'); await sleep(d*0.2);
+                    rA.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+rA.querySelectorAll('td')[1].textContent+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     rA.classList.remove('row-match');
                 } else {
                     rA.style.opacity='.25'; rA.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.2);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 rA.classList.remove('row-highlight');
             }
@@ -3879,30 +4319,30 @@
             var rowsB=Array.from(tbl(id,'sj-b').querySelectorAll('tbody tr'));
             var res=tbl(id,'sj-r').querySelector('tbody');
             hCode(id,'f'); await sleep(getAnimDelayForRow(0,rowsA.length));
-            hCode(id,'j'); await sleep(getAnimDelayForRow(0,rowsA.length)*0.3);
+            hCode(id,'j'); await sleep(getAnimDelayForRow(0,rowsA.length)*0.5);
             document.getElementById('res-'+id).style.display='block';
             for(var li=0;li<rowsA.length;li++){
                 var rL=rowsA[li], d=getAnimDelayForRow(li,rowsA.length);
                 var gerenteId=rowsA[li].querySelectorAll('td')[2].textContent;
-                rL.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.4);
+                rL.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.6);
                 if(gerenteId!=='NULL'){
                     for(var ri=0;ri<rowsB.length;ri++){
                         var rR=rowsB[ri];
                         var bId=rR.querySelectorAll('td')[0].textContent;
-                        rR.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.3);
+                        rR.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
                         if(bId===gerenteId){
                             rL.classList.add('row-match'); rR.classList.add('row-match');
-                            playSound('match'); await sleep(d*0.2);
+                            playSound('match'); await sleep(d*0.4);
                             var nr=document.createElement('tr'); nr.className='animated-row row-match';
                             nr.innerHTML='<td>'+rowsA[li].querySelectorAll('td')[1].textContent+'</td><td>'+rowsB[ri].querySelectorAll('td')[1].textContent+'</td>';
-                            res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                            res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                             rL.classList.remove('row-match'); rR.classList.remove('row-match');
                         }
                         rR.classList.remove('row-highlight');
                     }
                 } else {
                     rL.style.opacity='.35';
-                    playSound('delete'); await sleep(d*0.2);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 rL.classList.remove('row-highlight');
             }
@@ -3925,8 +4365,14 @@
             'date-year': runDateYear, 'date-month': runDateMonth, 'date-day': runDateDay,
             'date-format': runDateFormat, 'date-diff': runDateDiff,
             'case-when': runCaseWhen, distinct: runDistinct,
+            union: runUnion, 'union-all': runUnionAll,
             'is-null': runIsNull, having: runHaving,
-            union: runUnion, 'union-all': runUnionAll
+            'subquery-in': runSubqueryIn, 'subquery-scalar': runSubqueryScalar,
+            exists: runExists, 'self-join': runSelfJoin,
+            intersect: runIntersect, except: runExcept,
+            constraints: runConstraints, 'foreign-key': runForeignKey,
+            'limit-offset': runLimitOffset, 'row-number': runRowNumber,
+            rank: runRank, laglead: runLagLead
         };
         function skipHandler() { skipAnimation = true; }
         async function runSim(type) {
@@ -3965,31 +4411,31 @@
             document.getElementById('res-'+id).style.display='block';
             var namesB=[];
             for(var ri=0;ri<rowsB.length;ri++){
-                var rB=rowsB[ri], d=getAnimDelayForRow(ri,rowsA.length+rowsB.length);
+                var rB=rowsB[ri];
                 namesB.push(rB.querySelectorAll('td')[1].textContent);
             }
             for(var ri=0;ri<rowsA.length;ri++){
-                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length+rowsB.length);
+                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length);
                 var nome=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(namesB.indexOf(nome)!==-1){
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+nome+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
             }
-            hCode(id,'s2'); await sleep(getAnimDelayForRow(rowsA.length,rowsA.length+rowsB.length)*0.3);
+            hCode(id,'s2'); await sleep(getAnimDelayForRow(0,rowsB.length)*0.5);
             for(var ri=0;ri<rowsB.length;ri++){
-                var r=rowsB[ri], d=getAnimDelayForRow(rowsA.length+ri,rowsA.length+rowsB.length);
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.4);
+                var r=rowsB[ri], d=getAnimDelayForRow(ri,rowsB.length);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.6);
                 r.style.opacity='.25'; r.style.textDecoration='line-through';
-                playSound('delete'); await sleep(d*0.2);
+                playSound('delete'); await sleep(d*0.4);
                 r.classList.remove('row-highlight');
             }
             hCode(id,'s');
@@ -4010,29 +4456,344 @@
                 namesB.push(rowsB[ri].querySelectorAll('td')[1].textContent);
             }
             for(var ri=0;ri<rowsA.length;ri++){
-                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length+rowsB.length);
+                var r=rowsA[ri], d=getAnimDelayForRow(ri,rowsA.length);
                 var nome=r.querySelectorAll('td')[1].textContent;
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.5);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.8);
                 if(namesB.indexOf(nome)===-1){
-                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.3);
+                    r.classList.add('row-match'); playSound('match'); await sleep(d*0.5);
                     var nr=document.createElement('tr'); nr.className='animated-row row-match';
                     nr.innerHTML='<td>'+nome+'</td>';
-                    res.appendChild(nr); playSound('pop'); await sleep(d*0.3);
+                    res.appendChild(nr); playSound('pop'); await sleep(d*0.8);
                     r.classList.remove('row-match');
                 } else {
                     r.style.opacity='.25'; r.style.textDecoration='line-through';
-                    playSound('delete'); await sleep(d*0.3);
+                    playSound('delete'); await sleep(d*0.5);
                 }
                 r.classList.remove('row-highlight');
             }
-            hCode(id,'s2'); await sleep(getAnimDelayForRow(rowsA.length,rowsA.length+rowsB.length)*0.3);
+            hCode(id,'s2'); await sleep(getAnimDelayForRow(0,rowsB.length)*0.5);
             for(var ri=0;ri<rowsB.length;ri++){
-                var r=rowsB[ri], d=getAnimDelayForRow(rowsA.length+ri,rowsA.length+rowsB.length);
-                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.4);
-                r.classList.add('row-match'); playSound('match'); await sleep(d*0.2);
+                var r=rowsB[ri], d=getAnimDelayForRow(ri,rowsB.length);
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d*0.6);
+                r.classList.add('row-match'); playSound('match'); await sleep(d*0.4);
                 r.classList.remove('row-highlight','row-match');
             }
             hCode(id,'s');
+            finishSim(id);
+        }
+
+        // ============== CONSTRAINTS ==============
+        async function runConstraints() {
+            const id='constraints'; resetSim(id);
+            var tbody = tbl(id, 'co-d').querySelector('tbody');
+            tbody.innerHTML = '';
+            var consoleEl = document.getElementById('co-console');
+            consoleEl.innerHTML = '<div class="db-console-line info">>-- Aguardando instruções...</div><span class="db-console-cursor"></span>';
+            var d = 1000;
+
+            function log(txt, type='info') {
+                var cursor = consoleEl.querySelector('.db-console-cursor');
+                if(cursor) cursor.remove();
+                var cls = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+                consoleEl.innerHTML += `<div class="db-console-line ${cls}">>-- ${txt}</div>`;
+                consoleEl.innerHTML += '<span class="db-console-cursor"></span>';
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+
+            // Comando 1: Falha NOT NULL
+            log('INSERT INTO clientes VALUES (1, NULL, \'ana@email.com\', 25);', 'command');
+            hCode(id, 'n'); playSound('scan'); await sleep(d);
+            log('ERRO: Restrição NOT NULL violada! A coluna "nome" não pode ser nula.', 'error');
+            playSound('delete'); await sleep(d * 1.5);
+
+            // Comando 2: Sucesso Ana
+            hCode(id, 'c');
+            log('INSERT INTO clientes VALUES (1, \'Ana\', \'ana@email.com\', 25);', 'command');
+            await sleep(d * 0.5);
+            log('Sucesso! Linha inserida na tabela.', 'success');
+            var tr = document.createElement('tr');
+            tr.className = 'animated-row row-inserted';
+            tr.innerHTML = '<td>1</td><td>Ana</td><td>ana@email.com</td><td>25</td>';
+            tbody.appendChild(tr);
+            playSound('match'); await sleep(d * 0.5);
+            tr.classList.remove('row-inserted');
+            await sleep(d);
+
+            // Comando 3: Falha UNIQUE
+            log('INSERT INTO clientes VALUES (2, \'Bruno\', \'ana@email.com\', 30);', 'command');
+            hCode(id, 'e'); playSound('scan'); await sleep(d);
+            log('ERRO: Restrição UNIQUE violada! O email "ana@email.com" já existe.', 'error');
+            playSound('delete'); await sleep(d * 1.5);
+
+            // Comando 4: Falha CHECK
+            log('INSERT INTO clientes VALUES (2, \'Bruno\', \'bruno@email.com\', 15);', 'command');
+            hCode(id, 'i'); playSound('scan'); await sleep(d);
+            log('ERRO: Restrição CHECK violada! A idade deve ser >= 18.', 'error');
+            playSound('delete'); await sleep(d * 1.5);
+
+            // Comando 5: Sucesso Bruno
+            hCode(id, 'c');
+            log('INSERT INTO clientes VALUES (2, \'Bruno\', \'bruno@email.com\', 30);', 'command');
+            await sleep(d * 0.5);
+            log('Sucesso! Linha inserida na tabela.', 'success');
+            var tr2 = document.createElement('tr');
+            tr2.className = 'animated-row row-inserted';
+            tr2.innerHTML = '<td>2</td><td>Bruno</td><td>bruno@email.com</td><td>30</td>';
+            tbody.appendChild(tr2);
+            playSound('match'); await sleep(d * 0.5);
+            tr2.classList.remove('row-inserted');
+            
+            hCode(id, 'c2'); await sleep(d);
+            finishSim(id);
+        }
+
+        // ============== FOREIGN KEY ==============
+        async function runForeignKey() {
+            const id='foreign-key'; resetSim(id);
+            var tbody = tbl(id, 'fk-f').querySelector('tbody');
+            tbody.innerHTML = '';
+            var consoleEl = document.getElementById('fk-console');
+            consoleEl.innerHTML = '<div class="db-console-line info">>-- Aguardando instruções...</div><span class="db-console-cursor"></span>';
+            var d = 1000;
+
+            function log(txt, type='info') {
+                var cursor = consoleEl.querySelector('.db-console-cursor');
+                if(cursor) cursor.remove();
+                var cls = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+                consoleEl.innerHTML += `<div class="db-console-line ${cls}">>-- ${txt}</div>`;
+                consoleEl.innerHTML += '<span class="db-console-cursor"></span>';
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+
+            var pRows = tbl(id, 'fk-p').querySelectorAll('tbody tr');
+
+            // Comando 1: Falha na FK (id 3 não existe)
+            log('INSERT INTO funcionários VALUES (101, \'Carlos\', 3);', 'command');
+            hCode(id, 'fk'); await sleep(d * 0.5);
+            hCode(id, 'r'); playSound('scan'); 
+            
+            // Highlight parent rows to look for id 3
+            pRows.forEach(r => r.classList.add('row-highlight'));
+            await sleep(d);
+            pRows.forEach(r => r.classList.remove('row-highlight'));
+
+            log('ERRO: Violação de Integridade Referencial! O depto_id 3 não existe em DEPARTAMENTOS.', 'error');
+            playSound('delete'); await sleep(d * 1.5);
+
+            // Comando 2: Sucesso na FK (id 2 existe)
+            log('INSERT INTO funcionários VALUES (101, \'Carlos\', 2);', 'command');
+            hCode(id, 'fk'); await sleep(d * 0.5);
+            hCode(id, 'r'); playSound('scan');
+            
+            // Highlight parent row with id 2
+            pRows[1].classList.add('row-match'); playSound('match');
+            await sleep(d * 0.5);
+
+            log('Sucesso! Chave estrangeira encontrada. Linha inserida.', 'success');
+            var tr = document.createElement('tr');
+            tr.className = 'animated-row row-inserted';
+            tr.innerHTML = '<td>101</td><td>Carlos</td><td>2</td>';
+            tbody.appendChild(tr);
+            playSound('pop'); await sleep(d * 0.5);
+            
+            tr.classList.remove('row-inserted');
+            pRows[1].classList.remove('row-match');
+            await sleep(d);
+
+            // Comando 3: Tentativa de deletar pai referenciado (id 2)
+            log('DELETE FROM departamentos WHERE id = 2;', 'command');
+            hCode(id, 's');
+            pRows[1].classList.add('row-highlight'); playSound('scan');
+            await sleep(d);
+            log('ERRO: Não é possível deletar! O registro pai possui registros filhos associados.', 'error');
+            playSound('delete'); await sleep(d * 1.5);
+            pRows[1].classList.remove('row-highlight');
+
+            finishSim(id);
+        }
+
+        // ============== LIMIT OFFSET ==============
+        async function runLimitOffset() {
+            const id='limit-offset'; resetSim(id);
+            var rows=Array.from(tbl(id,'lo-d').querySelectorAll('tbody tr'));
+            var res=tbl(id,'lo-r').querySelector('tbody');
+            res.innerHTML = '';
+            document.getElementById('res-'+id).style.display='block';
+            var d = 1000;
+
+            // OFFSET 2: Skips first 2 rows
+            hCode(id, 'o'); await sleep(d * 0.5);
+            for(var i=0; i<2; i++) {
+                var r = rows[i];
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d * 0.5);
+                r.style.opacity = '.25';
+                r.style.textDecoration = 'line-through';
+                playSound('delete'); await sleep(d * 0.5);
+                r.classList.remove('row-highlight');
+            }
+
+            // LIMIT 3: Select next 3 rows
+            hCode(id, 'l'); await sleep(d * 0.5);
+            for(var i=2; i<5; i++) {
+                var r = rows[i];
+                r.classList.add('row-highlight'); playSound('scan'); await sleep(d * 0.5);
+                r.classList.add('row-match'); playSound('match'); await sleep(d * 0.3);
+                
+                var nr = document.createElement('tr');
+                nr.className = 'animated-row row-match';
+                nr.innerHTML = '<td>'+r.querySelectorAll('td')[1].textContent+'</td><td>'+r.querySelectorAll('td')[2].textContent+'</td>';
+                res.appendChild(nr);
+                playSound('pop'); await sleep(d * 0.4);
+                
+                r.classList.remove('row-highlight', 'row-match');
+            }
+
+            // Remaining rows are ignored because LIMIT is reached
+            for(var i=5; i<rows.length; i++) {
+                var r = rows[i];
+                r.style.opacity = '.25';
+            }
+            await sleep(d);
+            hCode(id, 's');
+            finishSim(id);
+        }
+
+        // ============== ROW_NUMBER ==============
+        async function runRowNumber() {
+            const id='row-number'; resetSim(id);
+            var rows=Array.from(tbl(id,'rn-d').querySelectorAll('tbody tr'));
+            var res=tbl(id,'rn-r').querySelector('tbody');
+            res.innerHTML = '';
+            document.getElementById('res-'+id).style.display='block';
+            var d = 1000;
+
+            var currentPartition = '';
+            var rowNum = 0;
+
+            for(var i=0; i<rows.length; i++) {
+                var r = rows[i];
+                var name = r.querySelectorAll('td')[0].textContent;
+                var depto = r.querySelectorAll('td')[1].textContent;
+                var sal = r.querySelectorAll('td')[2].textContent;
+
+                r.classList.add('row-highlight'); playSound('scan'); 
+                hCode(id, 'p'); await sleep(d * 0.4);
+
+                if (depto !== currentPartition) {
+                    currentPartition = depto;
+                    rowNum = 1;
+                    r.style.borderTop = '2px solid #00ffff';
+                } else {
+                    rowNum++;
+                }
+
+                hCode(id, 'o'); await sleep(d * 0.3);
+                hCode(id, 'w'); playSound('match'); r.classList.add('row-match'); await sleep(d * 0.3);
+
+                var nr = document.createElement('tr');
+                nr.className = 'animated-row row-match';
+                nr.innerHTML = '<td>'+name+'</td><td>'+depto+'</td><td>'+sal+'</td><td><strong>'+rowNum+'</strong></td>';
+                res.appendChild(nr);
+                playSound('pop'); await sleep(d * 0.5);
+
+                r.classList.remove('row-highlight', 'row-match');
+            }
+
+            hCode(id, 's');
+            finishSim(id);
+        }
+
+        // ============== RANK ==============
+        async function runRank() {
+            const id='rank'; resetSim(id);
+            var rows=Array.from(tbl(id,'rk-d').querySelectorAll('tbody tr'));
+            var res=tbl(id,'rk-r').querySelector('tbody');
+            res.innerHTML = '';
+            document.getElementById('res-'+id).style.display='block';
+            var d = 1000;
+
+            var lastScore = -1;
+            var rank = 0;
+            var rankCount = 0;
+
+            for(var i=0; i<rows.length; i++) {
+                var r = rows[i];
+                var name = r.querySelectorAll('td')[0].textContent;
+                var score = parseInt(r.querySelectorAll('td')[1].textContent, 10);
+                
+                r.classList.add('row-highlight'); playSound('scan');
+                hCode(id, 'w'); await sleep(d * 0.5);
+
+                rankCount++;
+                if (score !== lastScore) {
+                    rank = rankCount;
+                    lastScore = score;
+                } else {
+                    rows[i-1].classList.add('row-match');
+                    r.classList.add('row-match');
+                    playSound('match');
+                    await sleep(d * 0.4);
+                    rows[i-1].classList.remove('row-match');
+                }
+
+                r.classList.add('row-match'); playSound('match'); await sleep(d * 0.3);
+
+                var nr = document.createElement('tr');
+                nr.className = 'animated-row row-match';
+                nr.innerHTML = '<td>'+name+'</td><td>'+score+'</td><td><strong>'+rank+'</strong></td>';
+                res.appendChild(nr);
+                playSound('pop'); await sleep(d * 0.5);
+
+                r.classList.remove('row-highlight', 'row-match');
+            }
+
+            hCode(id, 's');
+            finishSim(id);
+        }
+
+        // ============== LAG LEAD ==============
+        async function runLagLead() {
+            const id='laglead'; resetSim(id);
+            var rows=Array.from(tbl(id,'ll-d').querySelectorAll('tbody tr'));
+            var res=tbl(id,'ll-r').querySelector('tbody');
+            res.innerHTML = '';
+            document.getElementById('res-'+id).style.display='block';
+            var d = 1000;
+
+            for(var i=0; i<rows.length; i++) {
+                var r = rows[i];
+                var mes = r.querySelectorAll('td')[0].textContent;
+                var vendas = r.querySelectorAll('td')[1].textContent;
+                var prevVendas = 'NULL';
+
+                r.classList.add('row-highlight'); playSound('scan');
+                hCode(id, 'w'); await sleep(d * 0.4);
+
+                if (i > 0) {
+                    var prevRow = rows[i-1];
+                    prevRow.classList.add('row-match');
+                    var prevTd = prevRow.querySelectorAll('td')[1];
+                    prevTd.style.background = '#0055ff';
+                    prevTd.style.color = '#fff';
+                    playSound('match');
+                    await sleep(d * 0.5);
+                    prevVendas = prevTd.textContent;
+                    
+                    prevRow.classList.remove('row-match');
+                    prevTd.style.background = '';
+                    prevTd.style.color = '';
+                }
+
+                var nr = document.createElement('tr');
+                nr.className = 'animated-row row-match';
+                nr.innerHTML = '<td>'+mes+'</td><td>'+vendas+'</td><td><strong style="color: #ffaa00;">'+prevVendas+'</strong></td>';
+                res.appendChild(nr);
+                playSound('pop'); await sleep(d * 0.5);
+
+                r.classList.remove('row-highlight');
+            }
+
+            hCode(id, 's');
             finishSim(id);
         }
 
@@ -4959,7 +5720,7 @@
                 {id:16,nome:'Free Woman',artista:'Lady Gaga',genero:'Pop',duracao:210,popularidade:84},
                 {id:17,nome:'Babylon',artista:'Lady Gaga',genero:'Pop',duracao:185,popularidade:80},
                 {id:18,nome:'Enigma',artista:'Lady Gaga',genero:'Pop',duracao:186,popularidade:79},
-                {id:19,nome:'Electric Love',artista:'Lady Gaga',genero:'Electropop',duracao:225,popularidade:82},
+                {id:19,nome:'Hair',artista:'Lady Gaga',genero:'Pop',duracao:225,popularidade:82},
                 {id:20,nome:'Replay',artista:'Lady Gaga',genero:'Pop',duracao:198,popularidade:77},
                 {id:21,nome:'Alice',artista:'Lady Gaga',genero:'Pop',duracao:180,popularidade:81},
                 {id:22,nome:'Plastic Doll',artista:'Lady Gaga',genero:'Pop',duracao:196,popularidade:76},
@@ -4967,33 +5728,33 @@
                 {id:24,nome:'Fun Tonight',artista:'Lady Gaga',genero:'Pop',duracao:195,popularidade:74},
                 {id:25,nome:'Sign from Above',artista:'Lady Gaga',genero:'Pop',duracao:191,popularidade:78},
                 {id:26,nome:'Sine from Above',artista:'Lady Gaga',genero:'Pop',duracao:202,popularidade:75},
-                {id:27,nome:'Crazy in Love',artista:'Lady Gaga',genero:'Pop',duracao:220,popularidade:85},
+                {id:27,nome:'John Wayne',artista:'Lady Gaga',genero:'Pop',duracao:220,popularidade:85},
                 {id:28,nome:'Perfect Illusion',artista:'Lady Gaga',genero:'Pop',duracao:210,popularidade:82},
                 {id:29,nome:'Million Reasons',artista:'Lady Gaga',genero:'Pop',duracao:205,popularidade:88},
                 {id:30,nome:'A-Yo',artista:'Lady Gaga',genero:'Pop',duracao:214,popularidade:76},
-                {id:31,nome:'Love for Nothing',artista:'Lady Gaga',genero:'Pop',duracao:230,popularidade:73},
+                {id:31,nome:'Dope',artista:'Lady Gaga',genero:'Pop',duracao:230,popularidade:73},
                 {id:32,nome:'Joanne',artista:'Lady Gaga',genero:'Country',duracao:208,popularidade:80},
                 {id:33,nome:'Diamond Heart',artista:'Lady Gaga',genero:'Pop',duracao:225,popularidade:77},
                 {id:34,nome:'Angel Down',artista:'Lady Gaga',genero:'Pop',duracao:198,popularidade:79},
-                {id:35,nome:'Puppy Love',artista:'Lady Gaga',genero:'Pop',duracao:212,popularidade:74},
+                {id:35,nome:'Scheiße',artista:'Lady Gaga',genero:'Pop',duracao:212,popularidade:74},
                 {id:36,nome:'Just Dance',artista:'Lady Gaga',genero:'Pop',duracao:242,popularidade:93},
                 {id:37,nome:'Paparazzi',artista:'Lady Gaga',genero:'Pop',duracao:212,popularidade:90},
                 {id:38,nome:'Monster',artista:'Lady Gaga',genero:'Pop',duracao:234,popularidade:84},
                 {id:39,nome:'Come to Mama',artista:'Lady Gaga',genero:'Pop',duracao:207,popularidade:72},
                 {id:40,nome:'Hey Girl',artista:'Lady Gaga',genero:'Pop',duracao:210,popularidade:71},
-                {id:41,nome:'All About Love',artista:'Lady Gaga',genero:'Pop',duracao:240,popularidade:81},
+                {id:41,nome:'Venus',artista:'Lady Gaga',genero:'Pop',duracao:240,popularidade:81},
                 {id:42,nome:'The Cure',artista:'Lady Gaga',genero:'Pop',duracao:190,popularidade:85},
                 {id:43,nome:'Marry the Night',artista:'Lady Gaga',genero:'Pop',duracao:254,popularidade:87},
-                {id:44,nome:'Tough Love',artista:'Lady Gaga',genero:'Pop',duracao:200,popularidade:73},
+                {id:44,nome:'Swine',artista:'Lady Gaga',genero:'Pop',duracao:200,popularidade:73},
                 {id:45,nome:'Boys Boys Boys',artista:'Lady Gaga',genero:'Pop',duracao:215,popularidade:70},
-                {id:46,nome:'First Love',artista:'Lady Gaga',genero:'Pop',duracao:220,popularidade:76},
+                {id:46,nome:'Gypsy',artista:'Lady Gaga',genero:'Pop',duracao:220,popularidade:76},
                 {id:47,nome:'Bad Kids',artista:'Lady Gaga',genero:'Pop',duracao:199,popularidade:78},
-                {id:48,nome:'Love is Blind',artista:'Lady Gaga',genero:'Pop',duracao:235,popularidade:75},
-                {id:49,nome:'Lovely Heart',artista:'Lady Gaga',genero:'Pop',duracao:190,popularidade:72},
-                {id:50,nome:'Unloveable',artista:'Lady Gaga',genero:'Pop',duracao:205,popularidade:74}
+                {id:48,nome:'Teeth',artista:'Lady Gaga',genero:'Pop',duracao:235,popularidade:75},
+                {id:49,nome:'Angel Down',artista:'Lady Gaga',genero:'Pop',duracao:190,popularidade:72},
+                {id:50,nome:'Dancin in Circles',artista:'Lady Gaga',genero:'Pop',duracao:205,popularidade:74}
               ]},
               cols:['id','nome','duracao'],
-              expected:[[5,'LoveGame',219],[9,'Love for Sale',195],[13,'Stupid Love',201],[19,'Electric Love',225],[27,'Crazy in Love',220],[31,'Love for Nothing',230],[35,'Puppy Love',212],[41,'All About Love',240],[44,'Tough Love',200],[46,'First Love',220],[48,'Love is Blind',235],[49,'Lovely Heart',190],[50,'Unloveable',205]]
+              expected:[[5,'LoveGame',219],[9,'Love for Sale',195],[13,'Stupid Love',201]]
             },
             { id:14, title:'Receita dos Shows do Bruno Mars', difficulty:'facil', animationType:'count', category:'Analista Musical',
               desc:'<strong>Cenário:</strong> A equipe financeira do Bruno Mars precisa do total de receita gerada pela turnê "An Evening with Silk Sonic" para fechamento do trimestre.<br><strong>Tarefa:</strong> Calcule a <strong>receita total</strong> de todos os shows realizados.',
@@ -5080,91 +5841,91 @@
                 {id:23,nome:'Pacify Her',album:'Cry Baby',duracao:200,genero:'Pop',popularidade:78},
                 {id:24,nome:'Milk and Cookies',album:'Cry Baby',duracao:198,genero:'Pop',popularidade:76},
                 {id:25,nome:'Teddy Bear',album:'Cry Baby',duracao:175,genero:'Pop',popularidade:73},
-                {id:26,nome:'Cake',album:'Under the Socket',duracao:215,genero:'Rock',popularidade:70},
-                {id:27,nome:'Broken Clock',album:'Under the Socket',duracao:200,genero:'Rock',popularidade:68},
-                {id:28,nome:'Raw',album:'Under the Socket',duracao:195,genero:'Rock',popularidade:72},
-                {id:29,nome:'Numbers',album:'Under the Socket',duracao:180,genero:'Rock',popularidade:67},
-                {id:30,nome:'Glue',album:'Under the Socket',duracao:205,genero:'Rock',popularidade:71},
-                {id:31,nome:'Nurse',album:'PORTALS',duracao:175,genero:'Alternative',popularidade:74},
+                {id:26,nome:'Cake',album:'Cry Baby',duracao:199,genero:'Pop',popularidade:70},
+                {id:27,nome:'Notebook',album:'After School',duracao:151,genero:'Pop',popularidade:68},
+                {id:28,nome:'Test Me',album:'After School',duracao:175,genero:'Pop',popularidade:72},
+                {id:29,nome:'Numbers',album:'After School',duracao:280,genero:'Pop',popularidade:67},
+                {id:30,nome:'Glued',album:'After School',duracao:193,genero:'Pop',popularidade:71},
+                {id:31,nome:'Battle of the Larynx',album:'PORTALS',duracao:187,genero:'Alternative',popularidade:74},
                 {id:32,nome:'Death',album:'PORTALS',duracao:220,genero:'Alternative',popularidade:82},
                 {id:33,nome:'Leeches',album:'PORTALS',duracao:185,genero:'Alternative',popularidade:77},
-                {id:34,nome:'Contortionist',album:'PORTALS',duracao:190,genero:'Alternative',popularidade:75},
+                {id:34,nome:'The Contortionist',album:'PORTALS',duracao:190,genero:'Alternative',popularidade:75},
                 {id:35,nome:'Light Shower',album:'PORTALS',duracao:178,genero:'Alternative',popularidade:73},
-                {id:36,nome:'Eyesore',album:'PORTALS',duracao:195,genero:'Alternative',popularidade:76},
-                {id:37,nome:'Phantom Farewell',album:'PORTALS',duracao:170,genero:'Alternative',popularidade:72},
-                {id:38,nome:'Fire Drill',album:'Cry Baby',duracao:210,genero:'Pop',popularidade:81},
+                {id:36,nome:'Faerie Soirée',album:'PORTALS',duracao:195,genero:'Alternative',popularidade:76},
+                {id:37,nome:'Nymphology',album:'PORTALS',duracao:170,genero:'Alternative',popularidade:72},
+                {id:38,nome:'Fire Drill',album:'After School',duracao:210,genero:'Pop',popularidade:81},
                 {id:39,nome:'Tag, You\'re It',album:'Cry Baby',duracao:185,genero:'Pop',popularidade:78},
                 {id:40,nome:'Cry Baby',album:'Cry Baby',duracao:215,genero:'Pop',popularidade:87},
                 {id:41,nome:'Alphabet Boy',album:'Cry Baby',duracao:200,genero:'Pop',popularidade:76},
-                {id:42,nome:'Fireside',album:'K-12',duracao:172,genero:'Pop',popularidade:69},
-                {id:43,nome:'Dragon Nights',album:'K-12',duracao:170,genero:'Pop',popularidade:73},
-                {id:44,nome:'Wheelchair',album:'Under the Socket',duracao:190,genero:'Rock',popularidade:69},
-                {id:45,nome:'Concrete',album:'Under the Socket',duracao:210,genero:'Rock',popularidade:73},
-                {id:46,nome:'Copy Cat',album:'Cry Baby',duracao:195,genero:'Pop',popularidade:77},
+                {id:42,nome:'High School Sweethearts',album:'K-12',duracao:172,genero:'Pop',popularidade:69},
+                {id:43,nome:'Recess',album:'K-12',duracao:170,genero:'Pop',popularidade:73},
+                {id:44,nome:'Brain & Heart',album:'After School',duracao:204,genero:'Pop',popularidade:69},
+                {id:45,nome:'Field Trip',album:'After School',duracao:181,genero:'Pop',popularidade:73},
+                {id:46,nome:'Copy Cat',album:'After School',duracao:195,genero:'Pop',popularidade:77},
                 {id:47,nome:'Carousel',album:'Cry Baby',duracao:180,genero:'Pop',popularidade:75},
-                {id:48,nome:'Light and Shadows',album:'PORTALS',duracao:205,genero:'Alternative',popularidade:79},
-                {id:49,nome:'Under Pressure',album:'Under the Socket',duracao:175,genero:'Rock',popularidade:66},
-                {id:50,nome:'Show Time',album:'K-12',duracao:168,genero:'Pop',popularidade:71}
+                {id:48,nome:'Womb',album:'PORTALS',duracao:205,genero:'Alternative',popularidade:79},
+                {id:49,nome:'Mrs. Potato Head',album:'Cry Baby',duracao:217,genero:'Pop',popularidade:66},
+                {id:50,nome:'The Bakery',album:'After School',duracao:168,genero:'Pop',popularidade:71}
               ]},
               cols:['id','nome','album','duracao'],
-              expected:[[1,'Wheels on the Bus','K-12',210],[2,'Strawberry Shortcake','K-12',185],[3,'Teacher\'s Pet','K-12',195],[5,'Drama Club','K-12',190],[6,'Show & Tell','K-12',200],[7,'Void','PORTALS',215],[8,'Evil','PORTALS',188],[9,'Tunnel Vision','PORTALS',198],[10,'Spider Web','PORTALS',205],[12,'Moon Cycle','PORTALS',210],[14,'The Principal','K-12',185],[15,'Orange Juice','K-12',192],[32,'Death','PORTALS',220],[33,'Leeches','PORTALS',185],[34,'Contortionist','PORTALS',190],[36,'Eyesore','PORTALS',195],[48,'Light and Shadows','PORTALS',205]]
+              expected:[[1,'Wheels on the Bus','K-12',210],[2,'Strawberry Shortcake','K-12',185],[3,'Teacher\'s Pet','K-12',195],[5,'Drama Club','K-12',190],[6,'Show & Tell','K-12',200],[7,'Void','PORTALS',215],[8,'Evil','PORTALS',188],[9,'Tunnel Vision','PORTALS',198],[10,'Spider Web','PORTALS',205],[12,'Moon Cycle','PORTALS',210],[14,'The Principal','K-12',185],[15,'Orange Juice','K-12',192],[31,'Battle of the Larynx','PORTALS',187],[32,'Death','PORTALS',220],[33,'Leeches','PORTALS',185],[34,'The Contortionist','PORTALS',190],[36,'Faerie Soirée','PORTALS',195],[48,'Womb','PORTALS',205]]
             },
             { id:16, title:'Top Hits do Oliver Tree', difficulty:'facil', animationType:'where', category:'Analista Musical',
               desc:'<strong>Cenário:</strong> O Oliver Tree quer saber quais são suas 5 músicas mais populares para definir o encerramento da turnê.<br><strong>Tarefa:</strong> Selecione o <strong>id</strong>, <strong>nome</strong> e <strong>reproducoes</strong> das 5 músicas com mais reproduções.',
               tables:{musicas:[
-                {id:1,nome:'Life Goes On',artista:'Oliver Tree',reproducoes:850000000,genero:'Alternative',duracao:180},
-                {id:2,nome:'Monster',artista:'Oliver Tree',reproducoes:420000000,genero:'Alternative',duracao:165},
-                {id:3,nome:'Jerk',artista:'Oliver Tree',reproducoes:380000000,genero:'Alternative',duracao:172},
-                {id:4,nome:'Bump',artista:'Oliver Tree',reproducoes:290000000,genero:'Alternative',duracao:158},
-                {id:5,nome:'Hurt',artista:'Oliver Tree',reproducoes:180000000,genero:'Alternative',duracao:195},
-                {id:6,nome:'All My Love',artista:'Oliver Tree',reproducoes:95000000,genero:'Alternative',duracao:188},
-                {id:7,nome:'Cymbals',artista:'Oliver Tree',reproducoes:75000000,genero:'Alternative',duracao:170},
-                {id:8,nome:'Contraband',artista:'Oliver Tree',reproducoes:62000000,genero:'Alternative',duracao:182},
-                {id:9,nome:'Urgent Message',artista:'Oliver Tree',reproducoes:48000000,genero:'Alternative',duracao:160},
-                {id:10,nome:'Freaks',artista:'Oliver Tree',reproducoes:35000000,genero:'Alternative',duracao:175},
-                {id:11,nome:'Aliens',artista:'Oliver Tree',reproducoes:28000000,genero:'Alternative',duracao:190},
-                {id:12,nome:'Walk Away',artista:'Oliver Tree',reproducoes:22000000,genero:'Alternative',duracao:168},
-                {id:13,nome:'Hate Me',artista:'Oliver Tree',reproducoes:170000000,genero:'Alternative',duracao:175},
-                {id:14,nome:'Balance',artista:'Oliver Tree',reproducoes:160000000,genero:'Alternative',duracao:168},
-                {id:15,nome:'Upside Down',artista:'Oliver Tree',reproducoes:150000000,genero:'Alternative',duracao:182},
-                {id:16,nome:'Rich Boys',artista:'Oliver Tree',reproducoes:140000000,genero:'Alternative',duracao:170},
-                {id:17,nome:'Let Me Down',artista:'Oliver Tree',reproducoes:130000000,genero:'Alternative',duracao:178},
-                {id:18,nome:'Move Me',artista:'Oliver Tree',reproducoes:120000000,genero:'Alternative',duracao:165},
-                {id:19,nome:'Trampoline',artista:'Oliver Tree',reproducoes:115000000,genero:'Alternative',duracao:190},
-                {id:20,nome:'Bury Me',artista:'Oliver Tree',reproducoes:110000000,genero:'Alternative',duracao:172},
-                {id:21,nome:'Waste',artista:'Oliver Tree',reproducoes:105000000,genero:'Alternative',duracao:185},
-                {id:22,nome:'When I am Down',artista:'Oliver Tree',reproducoes:100000000,genero:'Alternative',duracao:160},
-                {id:23,nome:'Wait',artista:'Oliver Tree',reproducoes:92000000,genero:'Alternative',duracao:175},
-                {id:24,nome:'Lies',artista:'Oliver Tree',reproducoes:88000000,genero:'Alternative',duracao:168},
-                {id:25,nome:'Doorman',artista:'Oliver Tree',reproducoes:82000000,genero:'Alternative',duracao:180},
-                {id:26,nome:'Nobody',artista:'Oliver Tree',reproducoes:78000000,genero:'Alternative',duracao:172},
-                {id:27,nome:'Off to the Races',artista:'Oliver Tree',reproducoes:72000000,genero:'Alternative',duracao:165},
-                {id:28,nome:'Haze',artista:'Oliver Tree',reproducoes:68000000,genero:'Alternative',duracao:190},
-                {id:29,nome:'Forget Me',artista:'Oliver Tree',reproducoes:65000000,genero:'Alternative',duracao:178},
-                {id:30,nome:'Drip',artista:'Oliver Tree',reproducoes:58000000,genero:'Alternative',duracao:168},
-                {id:31,nome:'Out of Order',artista:'Oliver Tree',reproducoes:55000000,genero:'Alternative',duracao:175},
-                {id:32,nome:'Chariot',artista:'Oliver Tree',reproducoes:52000000,genero:'Alternative',duracao:182},
-                {id:33,nome:'Home',artista:'Oliver Tree',reproducoes:45000000,genero:'Alternative',duracao:170},
-                {id:34,nome:'Ghost',artista:'Oliver Tree',reproducoes:42000000,genero:'Alternative',duracao:165},
-                {id:35,nome:'Ride',artista:'Oliver Tree',reproducoes:40000000,genero:'Alternative',duracao:178},
-                {id:36,nome:'Fly',artista:'Oliver Tree',reproducoes:38000000,genero:'Alternative',duracao:185},
-                {id:37,nome:'Run',artista:'Oliver Tree',reproducoes:32000000,genero:'Alternative',duracao:172},
-                {id:38,nome:'Hide',artista:'Oliver Tree',reproducoes:30000000,genero:'Alternative',duracao:168},
-                {id:39,nome:'Break',artista:'Oliver Tree',reproducoes:25000000,genero:'Alternative',duracao:175},
-                {id:40,nome:'Fade',artista:'Oliver Tree',reproducoes:20000000,genero:'Alternative',duracao:180},
-                {id:41,nome:'Glow',artista:'Oliver Tree',reproducoes:18000000,genero:'Alternative',duracao:165},
-                {id:42,nome:'Drift',artista:'Oliver Tree',reproducoes:15000000,genero:'Alternative',duracao:190},
-                {id:43,nome:'Sparks',artista:'Oliver Tree',reproducoes:12000000,genero:'Alternative',duracao:172},
-                {id:44,nome:'Blink',artista:'Oliver Tree',reproducoes:10000000,genero:'Alternative',duracao:168},
-                {id:45,nome:'Rush',artista:'Oliver Tree',reproducoes:8000000,genero:'Alternative',duracao:178},
-                {id:46,nome:'Snap',artista:'Oliver Tree',reproducoes:7000000,genero:'Alternative',duracao:165},
-                {id:47,nome:'Shift',artista:'Oliver Tree',reproducoes:6500000,genero:'Alternative',duracao:185},
-                {id:48,nome:'Wave',artista:'Oliver Tree',reproducoes:6000000,genero:'Alternative',duracao:172},
-                {id:49,nome:'Pulse',artista:'Oliver Tree',reproducoes:5500000,genero:'Alternative',duracao:168},
-                {id:50,nome:'Echo',artista:'Oliver Tree',reproducoes:5000000,genero:'Alternative',duracao:180}
+                {id:1,nome:'Life Goes On',artista:'Oliver Tree',reproducoes:850000000,genero:'Alternative',duracao:161},
+                {id:2,nome:'Alien Boy',artista:'Oliver Tree',reproducoes:650000000,genero:'Alternative',duracao:164},
+                {id:3,nome:'Jerk',artista:'Oliver Tree',reproducoes:380000000,genero:'Alternative',duracao:135},
+                {id:4,nome:'Hurt',artista:'Oliver Tree',reproducoes:350000000,genero:'Alternative',duracao:145},
+                {id:5,nome:'Miss You',artista:'Oliver Tree',reproducoes:750000000,genero:'Alternative',duracao:206},
+                {id:6,nome:'Miracle Man',artista:'Oliver Tree',reproducoes:280000000,genero:'Alternative',duracao:125},
+                {id:7,nome:'Cash Machine',artista:'Oliver Tree',reproducoes:250000000,genero:'Alternative',duracao:176},
+                {id:8,nome:'Let Me Down',artista:'Oliver Tree',reproducoes:220000000,genero:'Alternative',duracao:111},
+                {id:9,nome:'Bury Me Alive',artista:'Oliver Tree',reproducoes:180000000,genero:'Alternative',duracao:164},
+                {id:10,nome:'Freaks & Geeks',artista:'Oliver Tree',reproducoes:150000000,genero:'Alternative',duracao:140},
+                {id:11,nome:'Cowboys Don\'t Cry',artista:'Oliver Tree',reproducoes:120000000,genero:'Country',duracao:189},
+                {id:12,nome:'I\'m Gone',artista:'Oliver Tree',reproducoes:100000000,genero:'Alternative',duracao:185},
+                {id:13,nome:'Bounce',artista:'Oliver Tree',reproducoes:85000000,genero:'Alternative',duracao:175},
+                {id:14,nome:'One & Only',artista:'Oliver Tree',reproducoes:70000000,genero:'Alternative',duracao:180},
+                {id:15,nome:'Essence',artista:'Oliver Tree',reproducoes:55000000,genero:'Alternative',duracao:195},
+                {id:16,nome:'Fairweather Friends',artista:'Oliver Tree',reproducoes:48000000,genero:'Alternative',duracao:185},
+                {id:17,nome:'Swing & A Miss',artista:'Oliver Tree',reproducoes:45000000,genero:'Country',duracao:179},
+                {id:18,nome:'Suitcase Full Of Cash',artista:'Oliver Tree',reproducoes:38000000,genero:'Country',duracao:149},
+                {id:19,nome:'Doormat',artista:'Oliver Tree',reproducoes:35000000,genero:'Country',duracao:171},
+                {id:20,nome:'Cigarettes',artista:'Oliver Tree',reproducoes:32000000,genero:'Country',duracao:153},
+                {id:21,nome:'California',artista:'Oliver Tree',reproducoes:28000000,genero:'Country',duracao:173},
+                {id:22,nome:'Get Well Soon',artista:'Oliver Tree',reproducoes:25000000,genero:'Country',duracao:143},
+                {id:23,nome:'Playing With Fire',artista:'Oliver Tree',reproducoes:22000000,genero:'Country',duracao:148},
+                {id:24,nome:'The Villain',artista:'Oliver Tree',reproducoes:20000000,genero:'Country',duracao:153},
+                {id:25,nome:'Cowboy Tears',artista:'Oliver Tree',reproducoes:18000000,genero:'Country',duracao:177},
+                {id:26,nome:'Balloon Boy',artista:'Oliver Tree',reproducoes:15000000,genero:'Country',duracao:138},
+                {id:27,nome:'Things We Used To Do',artista:'Oliver Tree',reproducoes:12000000,genero:'Country',duracao:157},
+                {id:28,nome:'Smile',artista:'Oliver Tree',reproducoes:10000000,genero:'Alternative',duracao:165},
+                {id:29,nome:'Star',artista:'Oliver Tree',reproducoes:8000000,genero:'Alternative',duracao:180},
+                {id:30,nome:'Ugly Side',artista:'Oliver Tree',reproducoes:6000000,genero:'Alternative',duracao:172},
+                {id:31,nome:'Highlight Of My Life',artista:'Oliver Tree',reproducoes:5000000,genero:'Alternative',duracao:168},
+                {id:32,nome:'The First Night',artista:'Oliver Tree',reproducoes:4500000,genero:'Alternative',duracao:175},
+                {id:33,nome:'Strangers',artista:'Oliver Tree',reproducoes:4000000,genero:'Alternative',duracao:182},
+                {id:34,nome:'Invisible Man',artista:'Oliver Tree',reproducoes:3500000,genero:'Alternative',duracao:170},
+                {id:35,nome:'Elevator To The Sky',artista:'Oliver Tree',reproducoes:3000000,genero:'Alternative',duracao:165},
+                {id:36,nome:'With You',artista:'Oliver Tree',reproducoes:2500000,genero:'Alternative',duracao:178},
+                {id:37,nome:'When I\'m Down',artista:'Oliver Tree',reproducoes:120000000,genero:'Alternative',duracao:195},
+                {id:38,nome:'Joke\'s On You!',artista:'Oliver Tree',reproducoes:30000000,genero:'Alternative',duracao:191},
+                {id:39,nome:'Again & Again',artista:'Oliver Tree',reproducoes:25000000,genero:'Alternative',duracao:174},
+                {id:40,nome:'Waste My Time',artista:'Oliver Tree',reproducoes:20000000,genero:'Alternative',duracao:207},
+                {id:41,nome:'Introspective',artista:'Oliver Tree',reproducoes:18000000,genero:'Alternative',duracao:136},
+                {id:42,nome:'Me, Myself & I',artista:'Oliver Tree',reproducoes:15000000,genero:'Alternative',duracao:173},
+                {id:43,nome:'1993',artista:'Oliver Tree',reproducoes:12000000,genero:'Alternative',duracao:159},
+                {id:44,nome:'Balloon Boy',artista:'Oliver Tree',reproducoes:10000000,genero:'Country',duracao:138},
+                {id:45,nome:'Things We Used To Do',artista:'Oliver Tree',reproducoes:8000000,genero:'Country',duracao:157},
+                {id:46,nome:'California',artista:'Oliver Tree',reproducoes:7000000,genero:'Country',duracao:173},
+                {id:47,nome:'Get Well Soon',artista:'Oliver Tree',reproducoes:6500000,genero:'Country',duracao:143},
+                {id:48,nome:'Playing With Fire',artista:'Oliver Tree',reproducoes:6000000,genero:'Country',duracao:148},
+                {id:49,nome:'The Villain',artista:'Oliver Tree',reproducoes:5500000,genero:'Country',duracao:153},
+                {id:50,nome:'Cowboy Tears',artista:'Oliver Tree',reproducoes:5000000,genero:'Country',duracao:177}
               ]},
               cols:['id','nome','reproducoes'],
-              expected:[[1,'Life Goes On',850000000],[2,'Monster',420000000],[3,'Jerk',380000000],[4,'Bump',290000000],[5,'Hurt',180000000]]
+              expected:[[5,'Miss You',750000000],[1,'Life Goes On',850000000],[2,'Alien Boy',650000000],[3,'Jerk',380000000],[4,'Hurt',350000000]]
             },
             // ============ MÚSICA MÉDIO ============
                         { id:17, title:'Análise Cross-Platform', difficulty:'medio', animationType:'join', category:'Analista Musical',
@@ -5466,7 +6227,7 @@
                 {id:11,artista_id:1,nome:'Starboy',ano:2016,copias_vendidas:4000000},
                 {id:12,artista_id:1,nome:'Beauty Behind the Madness',ano:2015,copias_vendidas:4500000},
                 {id:13,artista_id:2,nome:'Dua Lipa',ano:2017,copias_vendidas:3500000},
-                {id:14,artista_id:2,nome:'Club Nostalgia',ano:2020,copias_vendidas:1800000},
+                {id:14,artista_id:2,nome:'Club Future Nostalgia',ano:2020,copias_vendidas:1800000},
                 {id:15,artista_id:3,nome:'YHLQMDLG',ano:2020,copias_vendidas:5000000},
                 {id:16,artista_id:3,nome:'El Último Tour Del Mundo',ano:2020,copias_vendidas:3500000},
                 {id:17,artista_id:4,nome:'1989',ano:2014,copias_vendidas:10000000},
@@ -5549,7 +6310,7 @@
                 {id:43,album_id:22,nome:'Happier Than Ever',duracao:298,preco:1.29},
                 {id:44,album_id:22,nome:'NDA',duracao:195,preco:1.29},
                 {id:45,album_id:23,nome:'Birds of a Feather',duracao:210,preco:1.29},
-                {id:46,album_id:23,nome:'What Was I Made For?',duracao:220,preco:1.29},
+                {id:46,album_id:23,nome:'Lunch',duracao:220,preco:1.29},
                 {id:47,album_id:24,nome:'ocean eyes',duracao:200,preco:1.29},
                 {id:48,album_id:24,nome:'idontwannabeyouanymore',duracao:196,preco:1.29},
                 {id:49,album_id:25,nome:'Shape of You',duracao:233,preco:1.29},
@@ -5559,7 +6320,7 @@
                 {id:53,album_id:27,nome:'Bad Habits',duracao:231,preco:1.29},
                 {id:54,album_id:27,nome:'Shivers',duracao:207,preco:1.29},
                 {id:55,album_id:28,nome:'Eyes Closed',duracao:221,preco:1.29},
-                {id:56,album_id:28,nome:'Eraser',duracao:227,preco:1.29},
+                {id:56,album_id:25,nome:'Eraser',duracao:227,preco:1.29},
                 {id:57,album_id:29,nome:'7 rings',duracao:179,preco:1.29},
                 {id:58,album_id:29,nome:'thank u, next',duracao:207,preco:1.29},
                 {id:59,album_id:30,nome:'positions',duracao:172,preco:1.29},
@@ -5584,7 +6345,7 @@
                 {id:78,album_id:39,nome:'girl i\'ve always been',duracao:166,preco:1.29},
                 {id:79,album_id:40,nome:'brutal',duracao:143,preco:1.29},
                 {id:80,album_id:40,nome:'traitor',duracao:249,preco:1.29},
-                {id:81,album_id:41,nome:'Say So',duracao:198,preco:1.29},
+                {id:81,album_id:42,nome:'Say So',duracao:198,preco:1.29},
                 {id:82,album_id:41,nome:'Need to Know',duracao:200,preco:1.29},
                 {id:83,album_id:42,nome:'Streets',duracao:174,preco:1.29},
                 {id:84,album_id:42,nome:'Like That',duracao:179,preco:1.29},
@@ -5629,56 +6390,56 @@
                 {id:3,artista_id:1,musica:'Ai Papai',reproducoes:95000000,likes:14000000,pais_ouvinte:'Brasil'},
                 {id:4,artista_id:1,musica:'Ai Papai',reproducoes:28000000,likes:2100000,pais_ouvinte:'EUA'},
                 {id:5,artista_id:1,musica:'Gata',reproducoes:72000000,likes:9800000,pais_ouvinte:'Brasil'},
-                {id:6,artista_id:2,musica:'Kilo',reproducoes:52000000,likes:8500000,pais_ouvinte:'Brasil'},
-                {id:7,artista_id:2,musica:'Kilo',reproducoes:8000000,likes:950000,pais_ouvinte:'EUA'},
-                {id:8,artista_id:2,musica:'Sente O Peso',reproducoes:48000000,likes:7200000,pais_ouvinte:'Brasil'},
+                {id:6,artista_id:2,musica:'K.O.',reproducoes:52000000,likes:8500000,pais_ouvinte:'Brasil'},
+                {id:7,artista_id:2,musica:'K.O.',reproducoes:8000000,likes:950000,pais_ouvinte:'EUA'},
+                {id:8,artista_id:2,musica:'Disk Me',reproducoes:48000000,likes:7200000,pais_ouvinte:'Brasil'},
                 {id:9,artista_id:2,musica:'Corpo Sensual',reproducoes:35000000,likes:5100000,pais_ouvinte:'Brasil'},
-                {id:10,artista_id:3,musica:'Machika',reproducoes:65000000,likes:9800000,pais_ouvinte:'Brasil'},
-                {id:11,artista_id:3,musica:'Machika',reproducoes:5000000,likes:600000,pais_ouvinte:'EUA'},
-                {id:12,artista_id:3,musica:'Faz Gostoso',reproducoes:42000000,likes:6300000,pais_ouvinte:'Brasil'},
-                {id:13,artista_id:3,musica:'Solta',reproducoes:31000000,likes:4200000,pais_ouvinte:'Brasil'},
-                {id:14,artista_id:4,musica:'Olha a Explosao',reproducoes:120000000,likes:15000000,pais_ouvinte:'Brasil'},
-                {id:15,artista_id:4,musica:'Olha a Explosao',reproducoes:35000000,likes:2800000,pais_ouvinte:'EUA'},
-                {id:16,artista_id:4,musica:'Tudo Que Voce Podia Ser',reproducoes:28000000,likes:3500000,pais_ouvinte:'Brasil'},
-                {id:17,artista_id:4,musica:'Vem Dançar comigo',reproducoes:55000000,likes:7200000,pais_ouvinte:'Brasil'},
-                {id:18,artista_id:5,musica:'Ameaca',reproducoes:38000000,likes:5500000,pais_ouvinte:'Brasil'},
-                {id:19,artista_id:5,musica:'Ameaca',reproducoes:6000000,likes:480000,pais_ouvinte:'EUA'},
+                {id:10,artista_id:3,musica:'Cheguei',reproducoes:65000000,likes:9800000,pais_ouvinte:'Brasil'},
+                {id:11,artista_id:3,musica:'Cheguei',reproducoes:5000000,likes:600000,pais_ouvinte:'EUA'},
+                {id:12,artista_id:3,musica:'Sou Eu',reproducoes:42000000,likes:6300000,pais_ouvinte:'Brasil'},
+                {id:13,artista_id:3,musica:'Solta a Batida',reproducoes:31000000,likes:4200000,pais_ouvinte:'Brasil'},
+                {id:14,artista_id:4,musica:'Olha a Explosão',reproducoes:120000000,likes:15000000,pais_ouvinte:'Brasil'},
+                {id:15,artista_id:4,musica:'Olha a Explosão',reproducoes:35000000,likes:2800000,pais_ouvinte:'EUA'},
+                {id:16,artista_id:4,musica:'Tumbalatum',reproducoes:28000000,likes:3500000,pais_ouvinte:'Brasil'},
+                {id:17,artista_id:4,musica:'Rabiola',reproducoes:55000000,likes:7200000,pais_ouvinte:'Brasil'},
+                {id:18,artista_id:5,musica:'Apocalipse',reproducoes:38000000,likes:5500000,pais_ouvinte:'Brasil'},
+                {id:19,artista_id:5,musica:'Apocalipse',reproducoes:6000000,likes:480000,pais_ouvinte:'EUA'},
                 {id:20,artista_id:5,musica:'Leilao',reproducoes:25000000,likes:3800000,pais_ouvinte:'Brasil'},
-                {id:21,artista_id:5,musica:'Designio',reproducoes:18000000,likes:2600000,pais_ouvinte:'Brasil'},
-                {id:22,artista_id:6,musica:'Dancin',reproducoes:45000000,likes:6800000,pais_ouvinte:'Brasil'},
-                {id:23,artista_id:6,musica:'Dancin',reproducoes:12000000,likes:1100000,pais_ouvinte:'EUA'},
-                {id:24,artista_id:6,musica:'Meu Jeito',reproducoes:30000000,likes:4200000,pais_ouvinte:'Brasil'},
-                {id:25,artista_id:6,musica:'Gelo',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
-                {id:26,artista_id:7,musica:'Poesia Acustica 7',reproducoes:68000000,likes:8900000,pais_ouvinte:'Brasil'},
-                {id:27,artista_id:7,musica:'Poesia Acustica 7',reproducoes:15000000,likes:1200000,pais_ouvinte:'EUA'},
-                {id:28,artista_id:7,musica:'Narcos',reproducoes:42000000,likes:5800000,pais_ouvinte:'Brasil'},
-                {id:29,artista_id:7,musica:'Mega',reproducoes:25000000,likes:3400000,pais_ouvinte:'Brasil'},
-                {id:30,artista_id:8,musica:'Baby Me Attract',reproducoes:58000000,likes:7600000,pais_ouvinte:'Brasil'},
-                {id:31,artista_id:8,musica:'Baby Me Attract',reproducoes:10000000,likes:850000,pais_ouvinte:'EUA'},
-                {id:32,artista_id:8,musica:'Vamos de Beach',reproducoes:32000000,likes:4500000,pais_ouvinte:'Brasil'},
-                {id:33,artista_id:8,musica:'Dengo',reproducoes:20000000,likes:2800000,pais_ouvinte:'Brasil'},
-                {id:34,artista_id:9,musica:'Ainda Lembro',reproducoes:28000000,likes:4200000,pais_ouvinte:'Brasil'},
-                {id:35,artista_id:9,musica:'Ainda Lembro',reproducoes:3000000,likes:280000,pais_ouvinte:'EUA'},
-                {id:36,artista_id:9,musica:'Cedo ou Tarde',reproducoes:15000000,likes:2300000,pais_ouvinte:'Brasil'},
-                {id:37,artista_id:9,musica:'Por Onde Andei',reproducoes:12000000,likes:1700000,pais_ouvinte:'Brasil'},
-                {id:38,artista_id:10,musica:'Respeito',reproducoes:35000000,likes:5200000,pais_ouvinte:'Brasil'},
-                {id:39,artista_id:10,musica:'Respeito',reproducoes:4000000,likes:350000,pais_ouvinte:'EUA'},
-                {id:40,artista_id:10,musica:'Tudo Que Voce Quiser',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
-                {id:41,artista_id:10,musica:'To de Volta',reproducoes:18000000,likes:2500000,pais_ouvinte:'Brasil'},
-                {id:42,artista_id:11,musica:'Balada Boa',reproducoes:40000000,likes:5600000,pais_ouvinte:'Brasil'},
-                {id:43,artista_id:11,musica:'Balada Boa',reproducoes:5000000,likes:420000,pais_ouvinte:'EUA'},
-                {id:44,artista_id:11,musica:'Meu Santo',reproducoes:28000000,likes:3900000,pais_ouvinte:'Brasil'},
-                {id:45,artista_id:11,musica:'Tocando em Frente',reproducoes:18000000,likes:2500000,pais_ouvinte:'Brasil'},
+                {id:21,artista_id:5,musica:'Samba in Paris',reproducoes:18000000,likes:2600000,pais_ouvinte:'Brasil'},
+                {id:22,artista_id:6,musica:'Dona de Mim',reproducoes:45000000,likes:6800000,pais_ouvinte:'Brasil'},
+                {id:23,artista_id:6,musica:'Dona de Mim',reproducoes:12000000,likes:1100000,pais_ouvinte:'EUA'},
+                {id:24,artista_id:6,musica:'Pesadão',reproducoes:30000000,likes:4200000,pais_ouvinte:'Brasil'},
+                {id:25,artista_id:6,musica:'Brisa',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
+                {id:26,artista_id:7,musica:'Malvadão',reproducoes:68000000,likes:8900000,pais_ouvinte:'Brasil'},
+                {id:27,artista_id:7,musica:'Malvadão',reproducoes:15000000,likes:1200000,pais_ouvinte:'EUA'},
+                {id:28,artista_id:7,musica:'Leão',reproducoes:42000000,likes:5800000,pais_ouvinte:'Brasil'},
+                {id:29,artista_id:7,musica:'Escorpião',reproducoes:25000000,likes:3400000,pais_ouvinte:'Brasil'},
+                {id:30,artista_id:8,musica:'Freio da Blazer',reproducoes:58000000,likes:7600000,pais_ouvinte:'Brasil'},
+                {id:31,artista_id:8,musica:'Freio da Blazer',reproducoes:10000000,likes:850000,pais_ouvinte:'EUA'},
+                {id:32,artista_id:8,musica:'Desce Mais',reproducoes:32000000,likes:4500000,pais_ouvinte:'Brasil'},
+                {id:33,artista_id:8,musica:'Coração Cachorro',reproducoes:20000000,likes:2800000,pais_ouvinte:'Brasil'},
+                {id:34,artista_id:9,musica:'Amei Te Ver',reproducoes:28000000,likes:4200000,pais_ouvinte:'Brasil'},
+                {id:35,artista_id:9,musica:'Amei Te Ver',reproducoes:3000000,likes:280000,pais_ouvinte:'EUA'},
+                {id:36,artista_id:9,musica:'Tangerina',reproducoes:15000000,likes:2300000,pais_ouvinte:'Brasil'},
+                {id:37,artista_id:9,musica:'Coisa Linda',reproducoes:12000000,likes:1700000,pais_ouvinte:'Brasil'},
+                {id:38,artista_id:10,musica:'Zero',reproducoes:35000000,likes:5200000,pais_ouvinte:'Brasil'},
+                {id:39,artista_id:10,musica:'Zero',reproducoes:4000000,likes:350000,pais_ouvinte:'EUA'},
+                {id:40,artista_id:10,musica:'Veludo Marrom',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
+                {id:41,artista_id:10,musica:'Calmô',reproducoes:18000000,likes:2500000,pais_ouvinte:'Brasil'},
+                {id:42,artista_id:11,musica:'Partilhar',reproducoes:40000000,likes:5600000,pais_ouvinte:'Brasil'},
+                {id:43,artista_id:11,musica:'Partilhar',reproducoes:5000000,likes:420000,pais_ouvinte:'EUA'},
+                {id:44,artista_id:11,musica:'Quando Bate Aquela Saudade',reproducoes:28000000,likes:3900000,pais_ouvinte:'Brasil'},
+                {id:45,artista_id:11,musica:'O Velho e o Moço',reproducoes:18000000,likes:2500000,pais_ouvinte:'Brasil'},
                 {id:46,artista_id:12,musica:'Nao Quero Dinheiro',reproducoes:85000000,likes:12000000,pais_ouvinte:'Brasil'},
                 {id:47,artista_id:12,musica:'Nao Quero Dinheiro',reproducoes:20000000,likes:1800000,pais_ouvinte:'EUA'},
                 {id:48,artista_id:12,musica:'Sossego',reproducoes:45000000,likes:6500000,pais_ouvinte:'Brasil'},
-                {id:49,artista_id:12,musica:'Primavera',reproducoes:30000000,likes:4200000,pais_ouvinte:'Brasil'},
-                {id:50,artista_id:12,musica:'Azul',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
-                {id:51,artista_id:5,musica:'Boneca de Flesh',reproducoes:15000000,likes:2100000,pais_ouvinte:'Brasil'},
-                {id:52,artista_id:7,musica:'Tentativas',reproducoes:18000000,likes:2400000,pais_ouvinte:'Brasil'}
+                {id:49,artista_id:12,musica:'Gostava Tanto de Você',reproducoes:30000000,likes:4200000,pais_ouvinte:'Brasil'},
+                {id:50,artista_id:12,musica:'Azul da Cor do Mar',reproducoes:22000000,likes:3100000,pais_ouvinte:'Brasil'},
+                {id:51,artista_id:5,musica:'Bonekinha',reproducoes:15000000,likes:2100000,pais_ouvinte:'Brasil'},
+                {id:52,artista_id:7,musica:'Solução',reproducoes:18000000,likes:2400000,pais_ouvinte:'Brasil'}
               ]},
               cols:['nome','taxa_engajamento','total_ouvintes_brasileiros'],
-              expected:[['Pabllo Vittar',15.41,135000000],['Tiago Iorc',14.91,55000000],['Ludmilla',14.71,138000000],['Gloria Groove',14.58,96000000],['IZA',14.54,97000000],['Liniker',14.4,75000000],['Tim Maia',14.18,182000000],['Rubel',13.95,86000000],['L7NNON',13.55,110000000],['Xama',13.4,153000000],['Anitta',13.2,347000000],['MC Kevinho',12.66,203000000]]
+              expected:[['Pabllo Vittar',15.41,135000000],['Tiago Iorc',14.91,55000000],['Ludmilla',14.71,138000000],['Gloria Groove',14.58,96000000],['IZA',14.54,97000000],['Liniker',14.4,75000000],['Tim Maia',14.18,182000000],['Rubel',13.95,86000000],['L7NNON',13.55,110000000],['Xamã',13.4,153000000],['Anitta',13.2,347000000],['MC Kevinho',12.66,203000000]]
             },
             { id:23, title:'Lucratividade dos Shows', difficulty:'dificil', animationType:'where', category:'Analista Musical',
               desc:'<strong>Cenário:</strong> A dirección financeira da Live Nation precisa categorizar cada show da turnê de Billie Eilish em faixas de lucratividade: "Alta" (acima de 1M), "Média" (entre 500K e 1M) e "Baixa" (abaixo de 500K).<br><strong>Tarefa:</strong> Selecione o <strong>nome_show</strong>, <strong>receita</strong>, <strong>custo</strong>, <strong>lucro</strong> e a <strong>faixa_lucratividade</strong>.',
@@ -5806,7 +6567,7 @@
                 {id:9,nome:'Gusttavo Lima',genero:'Sertanejo',nivel:'A'},
                 {id:10,nome:'Simone & Simaria',genero:'Sertanejo',nivel:'B'},
                 {id:11,nome:'Zezé Di Camargo & Luciano',genero:'Sertanejo',nivel:'A'},
-                {id:12,nome:'Maiara Walsh',genero:'Pop',nivel:'B'}
+                {id:12,nome:'Michel Teló',genero:'Sertanejo',nivel:'B'}
               ],turne:[
                 {id:1,artista_id:1,cidade:'São Paulo',data:'2026-01-10',publico:45000,receita:4500000},
                 {id:2,artista_id:1,cidade:'Rio de Janeiro',data:'2026-01-15',publico:50000,receita:5200000},
@@ -5878,7 +6639,7 @@
                 ['Pabllo Vittar',3,22667,5900000,'Estreia'],
                 ['Maiara & Maraísa',3,12333,3100000,'Estreia'],
                 ['Zezé Di Camargo & Luciano',2,16000,2800000,'Estreia'],
-                ['Maiara Walsh',2,12500,2000000,'Estreia']
+                ['Michel Teló',2,12500,2000000,'Estreia']
               ]
             }
         ];
@@ -6330,33 +7091,6 @@
                 viewportMargin: Infinity
             });
             _playgroundEditor.on('change', function() { updateEditorHeight(_playgroundEditor); });
-            // Editor zoom: Ctrl + scroll / Ctrl + / Ctrl -
-            var editorZoom = 1;
-            var editorArea = document.getElementById('playground-editor-area');
-            function applyEditorZoom(z) {
-                editorZoom = Math.max(0.5, Math.min(2, z));
-                editorArea.style.setProperty('--editor-zoom', editorZoom);
-                editorArea.style.zoom = editorZoom;
-                updateEditorHeight(_playgroundEditor);
-            }
-            editorArea.addEventListener('wheel', function(e) {
-                if (e.ctrlKey) {
-                    e.preventDefault();
-                    applyEditorZoom(editorZoom + (e.deltaY < 0 ? 0.1 : -0.1));
-                }
-            }, { passive: false });
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
-                    e.preventDefault();
-                    applyEditorZoom(editorZoom + 0.1);
-                } else if (e.ctrlKey && e.key === '-') {
-                    e.preventDefault();
-                    applyEditorZoom(editorZoom - 0.1);
-                } else if (e.ctrlKey && e.key === '0') {
-                    e.preventDefault();
-                    applyEditorZoom(1);
-                }
-            });
             // sound + glow (desktop)
             _playgroundEditor.on('keydown', function(cm, event) {
                 var k = event.key;
@@ -6521,10 +7255,10 @@
             if (resultPanel) {
                 resultPanel.style.display = 'block';
                 resultPanel.className = 'result-panel no-collapse';
-                document.getElementById('playground-result-msg').className = 'pass';
-                document.getElementById('playground-result-msg').textContent = '✔ Banco resetado. Tabelas recarregadas na próxima execução.';
-                document.getElementById('playground-result-head').innerHTML = '';
-                document.getElementById('playground-result-body').innerHTML = '';
+                var stack = document.getElementById('playground-result-stack');
+                if (stack) {
+                    stack.innerHTML = '<div class="pg-result-block"><div class="pass" style="padding:6px 10px;font-size:.38rem">✔ Banco resetado. Tabelas recarregadas na próxima execução.</div></div>';
+                }
             }
             try { playSound('snap'); } catch(e) {}
         }
@@ -6535,7 +7269,15 @@
             var inSingle = false, inDouble = false;
             for (var i = 0; i < sql.length; i++) {
                 var ch = sql[i];
-                if (ch === "'" && !inDouble) { inSingle = !inSingle; current += ch; }
+                if (ch === "'" && !inDouble) {
+                    if (inSingle && i + 1 < sql.length && sql[i + 1] === "'") {
+                        current += ch + "'";
+                        i++;
+                    } else {
+                        inSingle = !inSingle;
+                        current += ch;
+                    }
+                }
                 else if (ch === '"' && !inSingle) { inDouble = !inDouble; current += ch; }
                 else if (ch === ';' && !inSingle && !inDouble) {
                     var s = current.trim();
@@ -6548,18 +7290,96 @@
             return stmts;
         }
 
-        function runPlayground() {
+        var _pgPopupTimer = null;
+        function showPgPopup(okCount, errCount, total) {
+            var popup = document.getElementById('pg-popup');
+            var inner = popup.querySelector('.pg-popup-inner');
+            var icon = popup.querySelector('.pg-popup-icon');
+            var title = popup.querySelector('.pg-popup-title');
+            var detail = popup.querySelector('.pg-popup-detail');
+            var bar = popup.querySelector('.pg-popup-bar');
+            var particles = popup.querySelector('.pg-popup-particles');
+
+            if (_pgPopupTimer) { clearTimeout(_pgPopupTimer); _pgPopupTimer = null; }
+
+            inner.className = 'pg-popup-inner';
+            particles.innerHTML = '';
+            popup.classList.remove('show','exit');
+
+            void popup.offsetWidth;
+
+            var allOk = okCount > 0 && errCount === 0;
+            var allFail = okCount === 0 && errCount > 0;
+            var mixed = okCount > 0 && errCount > 0;
+
+            if (allOk) {
+                inner.classList.add('all-ok');
+                icon.textContent = '\u{1F3AE}';
+                title.textContent = 'MISSAO CUMPRIDA!';
+                detail.innerHTML = '<span class="ok">' + okCount + ' consulta' + (okCount > 1 ? 's' : '') + ' executada' + (okCount > 1 ? 's' : '') + '</span> com sucesso!';
+            } else if (allFail) {
+                inner.classList.add('all-fail');
+                icon.textContent = '\u{1F4A5}';
+                title.textContent = 'ERRO!';
+                detail.innerHTML = '<span class="err">' + errCount + ' erro' + (errCount > 1 ? 's' : '') + '</span> encontrado' + (errCount > 1 ? 's' : '') + '.';
+            } else {
+                inner.classList.add('mixed');
+                icon.textContent = '\u{26A0}\u{FE0F}';
+                title.textContent = 'RESULTADO PARCIAL';
+                detail.innerHTML = '<span class="ok">' + okCount + ' ok</span> / <span class="err">' + errCount + ' erro' + (errCount > 1 ? 's' : '') + '</span>';
+            }
+
+            bar.style.width = '0%';
+            popup.classList.add('show');
+            try { playSound(allOk ? 'match' : 'snap'); } catch(e) {}
+
+            if (allOk) {
+                var colors = ['#7ee787','#79c0ff','#e3b341','#d2a8ff','#ff6b6b','#ffffff'];
+                for (var i = 0; i < 12; i++) {
+                    var p = document.createElement('div');
+                    p.className = 'pg-popup-particle';
+                    p.style.left = (Math.random() * 100) + '%';
+                    p.style.top = (Math.random() * 40 + 10) + '%';
+                    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    p.style.animationDelay = (Math.random() * 0.4) + 's';
+                    p.style.animationDuration = (0.4 + Math.random() * 0.5) + 's';
+                    particles.appendChild(p);
+                }
+                var starChars = ['\u{2B50}','\u{2728}','\u{1F31F}','\u{1F4AB}'];
+                for (var j = 0; j < 5; j++) {
+                    var s = document.createElement('div');
+                    s.className = 'pg-popup-star';
+                    s.textContent = starChars[Math.floor(Math.random() * starChars.length)];
+                    s.style.left = (10 + Math.random() * 80) + '%';
+                    s.style.top = (Math.random() * 50) + '%';
+                    s.style.animationDelay = (0.1 + Math.random() * 0.4) + 's';
+                    particles.appendChild(s);
+                }
+            }
+
+            requestAnimationFrame(function() {
+                bar.style.width = '100%';
+            });
+
+            _pgPopupTimer = setTimeout(function() {
+                popup.classList.remove('show');
+                popup.classList.add('exit');
+                setTimeout(function() { popup.classList.remove('exit'); }, 400);
+            }, 3000);
+        }
+
+        async function runPlayground() {
             if (!_playgroundEditor) return;
             var raw = _playgroundEditor.getValue();
             var sql = raw.trim();
             var noComments = sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
             if (!sql || !noComments) {
                 var resultPanel = document.getElementById('playground-result');
-                var resultMsg = document.getElementById('playground-result-msg');
-                if (resultPanel && resultMsg) {
+                var stack = document.getElementById('playground-result-stack');
+                if (resultPanel) {
                     resultPanel.style.display = 'block';
-                    resultMsg.className = 'fail';
-                    resultMsg.textContent = '✖ Digite uma consulta SQL antes de executar.';
+                    resultPanel.className = 'result-panel no-collapse fail-border';
+                    if (stack) stack.innerHTML = '<div class="pg-result-block"><div class="fail" style="padding:6px 10px;font-size:.38rem">✖ Digite uma consulta SQL antes de executar.</div></div>';
                 }
                 return;
             }
@@ -6569,83 +7389,173 @@
             var resultHead = document.getElementById('playground-result-head');
             var resultBody = document.getElementById('playground-result-body');
             var rowCount = document.getElementById('playground-row-count');
+            var stack = document.getElementById('playground-result-stack');
 
-            resultHead.innerHTML = '';
-            resultBody.innerHTML = '';
             resultPanel.style.display = 'none';
             resultPanel.className = 'result-panel no-collapse';
-            resultMsg.className = '';
+            stack.innerHTML = '';
             if (rowCount) rowCount.textContent = '';
 
             var statements = splitStatements(noComments);
             if (statements.length === 0) {
                 resultPanel.style.display = 'block';
-                resultMsg.className = 'fail';
-                resultMsg.textContent = '✖ Digite uma consulta SQL antes de executar.';
+                resultPanel.className = 'result-panel no-collapse fail-border';
+                stack.innerHTML = '<div class="pg-result-block"><div class="fail" style="padding:6px 10px;font-size:.38rem">✖ Digite uma consulta SQL antes de executar.</div></div>';
                 return;
             }
 
-            var lastSelectResult = null;
-            var lastMsg = '';
-            var lastMsgClass = '';
-            var errors = [];
+            var selectBlocks = [];
+            var okCount = 0, errCount = 0;
 
             for (var si = 0; si < statements.length; si++) {
                 var stmt = statements[si];
+                resultMsg.textContent = '';
+                resultMsg.className = '';
+                resultHead.innerHTML = '';
+                resultBody.innerHTML = '';
+
                 var res = executeSingleStatement(stmt, resultPanel, resultMsg, resultHead, resultBody, rowCount);
+
                 if (res.error) {
-                    errors.push('Statement ' + (si + 1) + ': ' + res.error);
+                    errCount++;
+                    var block = document.createElement('div');
+                    block.className = 'pg-result-block';
+                    if (stmt.trim()) {
+                        var sqlDiv = document.createElement('div');
+                        sqlDiv.className = 'pg-result-sql';
+                        sqlDiv.textContent = stmt;
+                        block.appendChild(sqlDiv);
+                    }
+                    var msgDiv = document.createElement('div');
+                    msgDiv.className = 'fail';
+                    msgDiv.textContent = '✖ ' + res.error;
+                    block.appendChild(msgDiv);
+                    stack.insertBefore(block, stack.firstChild);
+                    continue;
                 }
+
                 if (res.selectResult) {
-                    lastSelectResult = res.selectResult;
+                    okCount++;
+                    selectBlocks.push({ stmt: stmt, result: res.selectResult, rows: res.selectResult.rows });
+                    continue;
                 }
-                if (res.msg) {
-                    lastMsg = res.msg;
-                    lastMsgClass = res.msgClass || 'pass';
+
+                var curMsg = resultMsg.textContent || '';
+                var curClass = resultMsg.className || 'pass';
+                var curHead = resultHead.innerHTML;
+                var curBody = resultBody.innerHTML;
+
+                okCount++;
+
+                var block = document.createElement('div');
+                block.className = 'pg-result-block';
+
+                if (stmt.trim()) {
+                    var sqlDiv = document.createElement('div');
+                    sqlDiv.className = 'pg-result-sql';
+                    var trimmed = stmt.trim();
+                    var isDDL = /^\s*(create|alter|drop|truncate)\s/i.test(trimmed);
+                    if (isDDL) {
+                        sqlDiv.innerHTML = '<span style="opacity:.5;cursor:pointer;" onclick="this.parentElement.querySelector(\'pre\').style.display=this.parentElement.querySelector(\'pre\').style.display===\'none\'?\'block\':\'none\'">▶ DDL</span><pre style="display:none;margin:6px 0 0;padding:6px;background:rgba(0,0,0,.3);border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:var(--hl-cyan);font-size:.38rem;">' + _escHtml(trimmed) + '</pre>';
+                    } else {
+                        sqlDiv.textContent = stmt;
+                    }
+                    block.appendChild(sqlDiv);
+                }
+
+                if (curHead && curBody) {
+                    var table = document.createElement('table');
+                    table.innerHTML = curHead + curBody;
+                    block.appendChild(table);
+                }
+
+                if (curMsg) {
+                    var msgDiv = document.createElement('div');
+                    msgDiv.className = curClass;
+                    msgDiv.textContent = curMsg;
+                    block.appendChild(msgDiv);
+                }
+
+                if (block.children.length > 0) {
+                    stack.insertBefore(block, stack.firstChild);
                 }
             }
 
-            if (errors.length > 0) {
-                resultPanel.style.display = 'block';
-                resultPanel.classList.add('fail-border');
-                resultMsg.className = 'fail';
-                resultMsg.textContent = '✖ ' + errors.join(' | ');
-                try { playSound('snap'); } catch(e) {}
-                return;
-            }
+            for (var si = selectBlocks.length - 1; si >= 0; si--) {
+                var sel = selectBlocks[si];
+                var isAnimated = (si === selectBlocks.length - 1);
 
-            if (lastSelectResult) {
-                var headHtml = '<tr>';
-                lastSelectResult.cols.forEach(function(c) { headHtml += '<th>' + c + '</th>'; });
-                headHtml += '</tr>';
-                resultHead.innerHTML = headHtml;
+                var block = document.createElement('div');
+                block.className = 'pg-result-block';
 
-                var bodyHtml = '';
-                lastSelectResult.rows.forEach(function(row) {
-                    bodyHtml += '<tr>';
-                    row.forEach(function(val) {
-                        bodyHtml += '<td>' + (val !== null && val !== undefined ? val : 'NULL') + '</td>';
-                    });
-                    bodyHtml += '</tr>';
+                if (sel.stmt.trim()) {
+                    var sqlDiv = document.createElement('div');
+                    sqlDiv.className = 'pg-result-sql';
+                    sqlDiv.textContent = sel.stmt;
+                    block.appendChild(sqlDiv);
+                }
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var headRow = document.createElement('tr');
+                sel.result.cols.forEach(function(c) {
+                    var th = document.createElement('th');
+                    th.textContent = c;
+                    headRow.appendChild(th);
                 });
-                resultBody.innerHTML = bodyHtml;
+                thead.appendChild(headRow);
+                table.appendChild(thead);
 
-                resultPanel.style.display = 'block';
-                resultMsg.className = 'pass';
-                var rowWord = lastSelectResult.rows.length === 1 ? 'linha' : 'linhas';
-                resultMsg.textContent = '▶ Consulta executada — ' + lastSelectResult.rows.length + ' ' + rowWord + ' retornadas.';
-                if (rowCount) rowCount.textContent = lastSelectResult.rows.length + ' registro(s)';
-            } else if (lastMsg) {
-                resultPanel.style.display = 'block';
-                resultMsg.className = lastMsgClass;
-                resultMsg.textContent = lastMsg;
+                var tbody = document.createElement('tbody');
+
+                if (isAnimated) {
+                    table.appendChild(tbody);
+                    block.appendChild(table);
+                    if (stack.firstChild) {
+                        stack.insertBefore(block, stack.firstChild);
+                    } else {
+                        stack.appendChild(block);
+                    }
+                    for (var ri = 0; ri < sel.rows.length; ri++) {
+                        var row = sel.rows[ri];
+                        var tr = document.createElement('tr');
+                        row.forEach(function(val) {
+                            var td = document.createElement('td');
+                            td.textContent = val;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    }
+                    if (rowCount) rowCount.textContent = sel.rows.length + ' registro(s)';
+                } else {
+                    sel.rows.forEach(function(row) {
+                        var tr = document.createElement('tr');
+                        row.forEach(function(val) {
+                            var td = document.createElement('td');
+                            td.textContent = val;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    block.appendChild(table);
+                    if (stack.firstChild) {
+                        stack.insertBefore(block, stack.firstChild);
+                    } else {
+                        stack.appendChild(block);
+                    }
+                }
             }
+
+            resultPanel.style.display = 'block';
             try { playSound('snap'); } catch(e) {}
+            showPgPopup(okCount, errCount, statements.length);
         }
 
         function executeSingleStatement(sql, resultPanel, resultMsg, resultHead, resultBody, rowCount) {
             var result = { error: null, selectResult: null, msg: null, msgClass: 'pass' };
             var sqlLower = normalizeSQL(sql).replace(/;\s*$/, '').trim();
+            resultPanel.classList.remove('desc-output');
 
             // Handle SHOW DATABASES
             if (/^\s*show\s+databases\s*$/i.test(sql)) {
@@ -6689,7 +7599,73 @@
                 resultPanel.style.display = 'block';
                 resultMsg.className = 'pass';
                 resultMsg.textContent = '✔ ' + tableNames.length + ' tabela(s) encontrada(s).';
-                if (rowCount) rowCount.textContent = tableNames.length + ' registro(s)';
+                if (rowCount) rowCount.textContent = tableNames.length + ' tabela(s)';
+                try { playSound('snap'); } catch(e) {}
+                return result;
+            }
+
+            // Handle DESC / DESCRIBE table
+            var descMatch = sqlLower.match(/^\s*(?:desc|describe)\s+(\w+)\s*$/);
+            if (descMatch) {
+                var descTable = descMatch[1];
+                var allTables = collectAllTables();
+                var tableRows = allTables[descTable];
+                var userCols = null, userDDL = null;
+                if (window._pgUserTables) {
+                    if (window._pgUserTables[descTable + '___cols']) {
+                        userCols = window._pgUserTables[descTable + '___cols'];
+                    }
+                    if (window._pgUserTables[descTable + '___ddl']) {
+                        userDDL = window._pgUserTables[descTable + '___ddl'];
+                    }
+                }
+                if (!tableRows && _pgDb && _pgDb.tables[descTable]) {
+                    try {
+                        var allData = _pgDb.exec('SELECT * FROM ' + descTable);
+                        if (Array.isArray(allData) && allData.length > 0) {
+                            tableRows = allData;
+                        }
+                    } catch(e) {}
+                }
+                resultPanel.classList.add('desc-output');
+                if (!tableRows && !userCols) {
+                    resultPanel.style.display = 'block';
+                    resultHead.innerHTML = '<tr><th>campo</th><th>tipo</th></tr>';
+                    resultBody.innerHTML = '<tr><td colspan="2" style="color:var(--hl-pink);">Tabela "' + descTable + '" não encontrada.</td></tr>';
+                    resultMsg.className = 'fail';
+                    resultMsg.textContent = '✖ Tabela "' + descTable + '" não encontrada.';
+                    try { playSound('snap'); } catch(e) {}
+                    return result;
+                }
+                var colNames = userCols ? userCols.map(function(c) { return c.name; }) : Object.keys(tableRows[0]);
+                var alasqlCols = null;
+                if (_pgDb && _pgDb.tables[descTable]) {
+                    try { alasqlCols = _pgDb.tables[descTable].columns; } catch(e) {}
+                }
+                resultHead.innerHTML = '<tr><th>campo</th><th>tipo</th><th>nulo</th><th>chave</th></tr>';
+                resultBody.innerHTML = colNames.map(function(col, idx) {
+                    var colDef = userCols ? userCols.filter(function(c) { return c.name === col; })[0] : null;
+                    var aCol = alasqlCols ? alasqlCols.filter(function(c) { return c.columnid === col; })[0] : null;
+                    var type = colDef ? colDef.type : (aCol ? (aCol.dbtypeid || 'STRING').toUpperCase() : (tableRows ? sqlType(tableRows[0][col]) : 'STRING'));
+                    var nullable = colDef ? (colDef.notNull ? 'NÃO' : 'SIM') : (aCol ? (aCol.notNull ? 'NÃO' : 'SIM') : 'SIM');
+                    var key = '';
+                    if (colDef) {
+                        key = colDef.pk ? 'PK' : colDef.fk ? 'FK' : '';
+                    } else if (aCol) {
+                        key = aCol.primaryKey ? 'PK' : '';
+                    }
+                    if (!key) {
+                        var lowerCol = col.toLowerCase();
+                        if (lowerCol === 'id' || (lowerCol.endsWith('_id') === false && idx === 0 && type === 'INT')) key = 'PK';
+                        else if (lowerCol.endsWith('_id')) key = 'FK';
+                    }
+                    var keyHtml = key === 'PK' ? '<span class="col-pk">PK</span>' : key === 'FK' ? '<span class="col-fk">FK</span>' : '<span class="col-dash">—</span>';
+                    return '<tr><td class="col-name">' + col + '</td><td class="col-type">' + type + '</td><td class="col-null">' + nullable + '</td><td>' + keyHtml + '</td></tr>';
+                }).join('');
+                resultPanel.style.display = 'block';
+                resultMsg.className = 'pass';
+                resultMsg.textContent = '✔ ' + colNames.length + ' coluna(s) encontrada(s) em "' + descTable + '".';
+                if (rowCount) rowCount.textContent = colNames.length + ' coluna(s)';
                 try { playSound('snap'); } catch(e) {}
                 return result;
             }
@@ -6707,6 +7683,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Database "' + dbName + '" não encontrado. Crie com CREATE DATABASE ' + dbName;
+                    result.error = 'Database "' + dbName + '" não encontrado.';
                 }
                 try { playSound('snap'); } catch(e) {}
                 return result;
@@ -6721,6 +7698,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Database "' + newDbName + '" já existe.';
+                    result.error = 'Database "' + newDbName + '" já existe.';
                 } else {
                     _pgDbMap[newDbName] = [];
                     _pgUserDbNames.add(newDbName);
@@ -6747,6 +7725,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Database "' + delDbName + '" não existe.';
+                    result.error = 'Database "' + delDbName + '" não existe.';
                 } else {
                     // Remove all tables from the database in AlaSQL
                     if (_pgDb) {
@@ -6780,6 +7759,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + delTblName + '" não encontrada.';
+                    result.error = 'Tabela "' + delTblName + '" não encontrada.';
                 } else {
                     // Remove from AlaSQL
                     if (_pgDb) {
@@ -6815,10 +7795,12 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Database "' + oldDbName + '" não existe.';
+                    result.error = 'Database "' + oldDbName + '" não existe.';
                 } else if (_pgDbMap[newDbName]) {
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Database "' + newDbName + '" já existe.';
+                    result.error = 'Database "' + newDbName + '" já existe.';
                 } else {
                     _pgDbMap[newDbName] = _pgDbMap[oldDbName];
                     delete _pgDbMap[oldDbName];
@@ -6850,10 +7832,12 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + oldTblName + '" não encontrada.';
+                    result.error = 'Tabela "' + oldTblName + '" não encontrada.';
                 } else if (_pgDbMap[tblDb].indexOf(newTblName) !== -1) {
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + newTblName + '" já existe.';
+                    result.error = 'Tabela "' + newTblName + '" já existe.';
                 } else {
                     // Update JS maps
                     var tidx = _pgDbMap[tblDb].indexOf(oldTblName);
@@ -6893,6 +7877,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Selecione um database primeiro com USE nome_database.';
+                    result.error = 'Selecione um database primeiro com USE nome_database.';
                     try { playSound('snap'); } catch(e) {}
                     return result;
                 }
@@ -6901,6 +7886,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + tblName + '" já existe no database "' + dbName + '".';
+                    result.error = 'Tabela "' + tblName + '" já existe no database "' + dbName + '".';
                     try { playSound('snap'); } catch(e) {}
                     return result;
                 }
@@ -6998,6 +7984,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + tblName + '" não encontrada.';
+                    result.error = 'Tabela "' + tblName + '" não encontrada.';
                     try { playSound('snap'); } catch(e) {}
                     return result;
                 }
@@ -7016,6 +8003,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + tblName + '" sem definição de colunas.';
+                    result.error = 'Tabela "' + tblName + '" sem definição de colunas.';
                     try { playSound('snap'); } catch(e) {}
                     return result;
                 }
@@ -7053,6 +8041,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + ttName + '" não encontrada.';
+                    result.error = 'Tabela "' + ttName + '" não encontrada.';
                 } else {
                     if (window._pgUserTables && window._pgUserTables[ttName]) window._pgUserTables[ttName] = [];
                     if (_pgDb) {
@@ -7073,6 +8062,12 @@
             if (showColMatch) {
                 var scName = showColMatch[1];
                 var colDefs = window._pgUserTables ? window._pgUserTables[scName + '___cols'] : null;
+                if (!colDefs && _pgTableMeta[scName]) {
+                    colDefs = _pgTableMeta[scName].cols.map(function(c) {
+                        var parts = c.split(' ');
+                        return { name: parts[0], type: parts[1] || 'TEXT' };
+                    });
+                }
                 if (!colDefs) {
                     var allTbls = collectAllTables();
                     if (allTbls[scName] && allTbls[scName].length > 0) {
@@ -7086,7 +8081,7 @@
                 } else {
                     resultHead.innerHTML = '<tr><th>coluna</th><th>tipo</th></tr>';
                     resultBody.innerHTML = colDefs.map(function(c) {
-                        return '<tr><td>' + c.name + '</td><td>' + c.type + '</td></tr>';
+                        return '<tr><td>' + _escHtml(c.name) + '</td><td>' + _escHtml(c.type) + '</td></tr>';
                     }).join('');
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'pass';
@@ -7111,6 +8106,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + aatTbl + '" não encontrada.';
+                    result.error = 'Tabela "' + aatTbl + '" não encontrada.';
                 } else {
                     // Update metadata
                     if (window._pgUserTables) {
@@ -7146,6 +8142,7 @@
                     resultPanel.style.display = 'block';
                     resultMsg.className = 'fail';
                     resultMsg.textContent = '✖ Tabela "' + adtTbl + '" não encontrada.';
+                    result.error = 'Tabela "' + adtTbl + '" não encontrada.';
                 } else {
                     // Update metadata
                     if (window._pgUserTables && window._pgUserTables[adtTbl + '___cols']) {
@@ -7209,7 +8206,7 @@
             }
 
             var headHtml = '<tr>';
-            sqlResult.cols.forEach(function(c) { headHtml += '<th>' + c + '</th>'; });
+            sqlResult.cols.forEach(function(c) { headHtml += '<th>' + _escHtml(c) + '</th>'; });
             headHtml += '</tr>';
             resultHead.innerHTML = headHtml;
 
@@ -7217,7 +8214,7 @@
             sqlResult.rows.forEach(function(row) {
                 bodyHtml += '<tr>';
                 row.forEach(function(val) {
-                    bodyHtml += '<td>' + (val !== null && val !== undefined ? val : 'NULL') + '</td>';
+                    bodyHtml += '<td>' + _escHtml(val) + '</td>';
                 });
                 bodyHtml += '</tr>';
             });
@@ -7347,6 +8344,11 @@
 
         var _pgDb = null;
         var _pgLoadedKeys = null;
+
+        function _escHtml(s) {
+            if (s === null || s === undefined) return 'NULL';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
 
         function _pgLoadTables(tables) {
             if (!_pgDb) _pgDb = new alasql.Database();
@@ -7684,6 +8686,7 @@
                 nr.className = 'animated-row row-match';
                 nr.innerHTML = '<td>' + count + '</td>';
                 animBody.appendChild(nr);
+                _isBatchLeader = true;
                 playSound('pop');
             } else if (type === 'sum') {
                 var tname = tableNames[0];
@@ -7715,8 +8718,10 @@
                 nr.className = 'animated-row row-match';
                 nr.innerHTML = '<td>' + sum + '</td>';
                 animBody.appendChild(nr);
+                _isBatchLeader = true;
                 playSound('pop');
             }
+            _isBatchLeader = true;
         }
 
         function showHint() {
@@ -7727,11 +8732,11 @@
                 return;
             }
             var html = '<div class="hint-title">Resultado Esperado</div><table><thead><tr>';
-            currentChallenge.cols.forEach(function(c) { html += '<th>' + c + '</th>'; });
+            currentChallenge.cols.forEach(function(c) { html += '<th>' + _escHtml(c) + '</th>'; });
             html += '</tr></thead><tbody>';
             currentChallenge.expected.forEach(function(row) {
                 html += '<tr>';
-                row.forEach(function(v) { html += '<td>' + v + '</td>'; });
+                row.forEach(function(v) { html += '<td>' + _escHtml(v) + '</td>'; });
                 html += '</tr>';
             });
             html += '</tbody></table>';
@@ -7793,7 +8798,7 @@
             var match = result.cols.length === expCols.length &&
                         result.rows.length === expRows.length &&
                         result.rows.every(function(r, i) {
-                            return r.every(function(v, j) { return v == expRows[i][j]; });
+                            return r.every(function(v, j) { return v === expRows[i][j]; });
                         });
             if (match) {
                 // Expandir tabelas automaticamente
@@ -7819,13 +8824,13 @@
             } else {
                 rp.className = 'result-panel fail-border fail-glow fail-flash';
                 var html = '<tr>';
-                result.cols.forEach(function(c) { html += '<th>' + c + '</th>'; });
+                result.cols.forEach(function(c) { html += '<th>' + _escHtml(c) + '</th>'; });
                 html += '</tr>';
                 th.innerHTML = html;
                 var rowsHtml = '';
                 result.rows.forEach(function(r) {
                     rowsHtml += '<tr>';
-                    r.forEach(function(v) { rowsHtml += '<td>' + (v !== null ? v : '') + '</td>'; });
+                    r.forEach(function(v) { rowsHtml += '<td>' + _escHtml(v) + '</td>'; });
                     rowsHtml += '</tr>';
                 });
                 tb.innerHTML = rowsHtml;
@@ -8036,7 +9041,7 @@
             });
             // Bloquear teclado nativo mobile
             var _cmInput = sqlEditor.getInputField();
-            if (_cmInput && window.innerWidth <= 768 && ('ontouchstart' in window)) {
+            if (_cmInput && window.innerWidth <= 768 && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)) {
                 _cmInput.setAttribute('inputmode', 'none');
                 _cmInput.setAttribute('autocomplete', 'off');
                 _cmInput.setAttribute('autocorrect', 'off');
@@ -8159,6 +9164,8 @@
         function _getActiveEditor() {
             if (sqlEditor && sqlEditor.hasFocus()) return sqlEditor;
             if (_playgroundEditor && _playgroundEditor.hasFocus()) return _playgroundEditor;
+            var activeSim = document.querySelector('.simulation.active');
+            if (activeSim && activeSim.id === 'sim-playground' && _playgroundEditor) return _playgroundEditor;
             return sqlEditor;
         }
         function showKb() {
@@ -8309,7 +9316,12 @@
                     _scrollCursorIntoView();
                     return;
                 } else if (action === 'run') {
-                    runChallenge();
+                    var activeSim = document.querySelector('.simulation.active');
+                    if (activeSim && activeSim.id === 'sim-playground') {
+                        runPlayground();
+                    } else {
+                        runChallenge();
+                    }
                     return;
                 } else if (v) {
                     var text = (_kbShift && /^[a-z]$/.test(v)) ? v.toUpperCase() : v;
@@ -8757,6 +9769,17 @@
             }
         })();
     </script>
+    <div id="pg-popup">
+        <div class="pg-popup-inner">
+            <div class="pg-popup-icon"></div>
+            <div class="pg-popup-text">
+                <div class="pg-popup-title"></div>
+                <div class="pg-popup-detail"></div>
+            </div>
+            <div class="pg-popup-bar"></div>
+            <div class="pg-popup-particles"></div>
+        </div>
+    </div>
     <div class="footer">Feito por <strong>Wagner Aick</strong> <span style="vertical-align:-1px;font-size:.7rem;">&#10084;</span> | <a href="https://github.com/aickwagner" target="_blank" rel="noopener" style="color:var(--hl-purple);text-decoration:underline;text-underline-offset:2px;"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px;text-decoration:none;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><br><a href="https://github.com/aickwagner/SQL-NA-PRATICA" target="_blank" rel="noopener" style="color:var(--hl-cyan);text-decoration:underline;text-underline-offset:2px;"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:4px;text-decoration:none;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Repositório</a></div>
 </body>
 </html>
