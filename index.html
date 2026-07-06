@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -467,12 +467,14 @@
         #playground-schemas .pg-schema-db-header { box-shadow: 4px 4px 0 rgba(0,0,0,.3); }
         #playground-result { margin-top: 16px; }
         #playground-result-stack { display: flex; flex-direction: column; gap: 8px; }
-        .pg-result-block { background: rgba(0,0,0,.2); border-radius: 0; overflow: hidden; border: 1px solid var(--border); }
+        .pg-result-block { background: rgba(0,0,0,.2); border-radius: 0; border: 1px solid var(--border); }
         .pg-result-block:first-child { border-color: var(--hl-cyan); }
         .pg-result-sql { font-size: .6rem; padding: 10px 14px; background: rgba(255,255,255,.04); color: var(--hl-yellow); font-family: var(--pixel-font); word-break: break-all; border-bottom: 2px solid var(--border); letter-spacing: .5px; }
+        .pg-result-block .pg-tbl-wrap { overflow-x: auto; }
         .pg-result-block table { width: 100%; border-collapse: collapse; font-size: .5rem; }
-        .pg-result-block table th { font-size: .45rem; padding: 5px 8px 8px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .4px; }
-        .pg-result-block table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: .5rem; }
+        .pg-result-block table th, .pg-result-block table td { padding: 6px 10px; text-align: left; white-space: nowrap; }
+        .pg-result-block table th { font-size: .45rem; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .4px; }
+        .pg-result-block table td { border-bottom: 1px solid var(--border); font-size: .5rem; }
         .pg-result-block table tr:last-child td { border-bottom: none; }
         .pg-result-block .pass, .pg-result-block .fail { padding: 8px 12px; font-size: .5rem; }
         .pg-result-block .fail { color: var(--kw-pink); }
@@ -861,9 +863,11 @@
         .result-panel h4.ok { color: var(--hl-green); }
         .result-panel h4.err { color: var(--hl-pink); }
         .result-panel h4.info { color: var(--hl-cyan); }
+        .result-panel .pg-tbl-wrap { overflow-x: auto; }
         .result-panel table { font-size: .6rem; width: 100%; border-collapse: collapse; }
-        .result-panel th { font-size: .5rem; padding: 8px 12px; text-align: left; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .5px; background: rgba(121,192,255,0.05); }
-        .result-panel td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+        .result-panel th, .result-panel td { padding: 6px 12px; text-align: left; white-space: nowrap; }
+        .result-panel th { font-size: .5rem; color: var(--hl-cyan); border-bottom: 2px solid var(--border); font-weight: 400; text-transform: uppercase; letter-spacing: .5px; background: rgba(121,192,255,0.05); }
+        .result-panel td { border-bottom: 1px solid var(--border); }
         .result-panel tr:hover td { background: rgba(121,192,255,0.08); }
         .result-panel tr:last-child td { border-bottom: none; }
         .error-msg { color: var(--hl-pink); font-size: .5rem; margin-top: 6px; }
@@ -2862,8 +2866,8 @@
                                 <div id="playground-editor"></div>
                                 <div class="btn-row-challenge">
                                     <button class="btn-exec" onclick="runPlayground()" data-tip="Executar (Ctrl+Enter)"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 21,12 6,21"/></svg></button>
-                                    <button class="btn-hint" onclick="pgFormatSql()" data-tip="Formatar SQL" style="color:#f59e0b;border-color:#f59e0b"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/><path d="M14.5 17.5 4.5 15"/></svg></button>
-                                    <button class="btn-hint btn-square" onclick="pgClear()" data-tip="Limpar Editor" style="font-size:.75rem">✕</button>
+                                    <button class="btn-hint" onclick="pgClear()" data-tip="Limpar Editor" style="font-size:.75rem">✕</button>
+                                    <button class="btn-hint btn-square" onclick="pgFormatSql()" data-tip="Formatar SQL" style="color:#f59e0b;border-color:#f59e0b"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/><path d="M14.5 17.5 4.5 15"/></svg></button>
                                 </div>
                             </div>
                             <div class="result-panel no-collapse" id="playground-result" style="display:none">
@@ -2934,6 +2938,7 @@
         document.addEventListener('click', unlockAudio, { once: true });
         function playSound(type) {
             if (!_isBatchLeader) return;
+            if (window._pgMuteExecSound && type === 'snap') return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const t = audioCtx.currentTime;
             // Helper: cria um oscilador com envelope
@@ -7200,7 +7205,7 @@
                         if (t.ddl) window._pgUserTables[tname + '___ddl'] = t.ddl;
                         var ddl = t.ddl || (t.cols ? t.cols.map(function(c) { return c.name + ' ' + c.type; }).join(', ') : '');
                         if (ddl) {
-                            try { _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + ddl + ')'); } catch(err) {}
+                            try { _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + sanitizeDDL(ddl) + ')'); } catch(err) {}
                             (t.rows || []).forEach(function(row) {
                                 var cols = Object.keys(row);
                                 var vals = cols.map(function(c) { return row[c]; });
@@ -7406,6 +7411,7 @@
 
             var selectBlocks = [];
             var okCount = 0, errCount = 0;
+            window._pgMuteExecSound = statements.length > 1;
 
             for (var si = 0; si < statements.length; si++) {
                 var stmt = statements[si];
@@ -7510,7 +7516,10 @@
 
                 if (isAnimated) {
                     table.appendChild(tbody);
-                    block.appendChild(table);
+                    var wrap = document.createElement('div');
+                    wrap.className = 'pg-tbl-wrap';
+                    wrap.appendChild(table);
+                    block.appendChild(wrap);
                     if (stack.firstChild) {
                         stack.insertBefore(block, stack.firstChild);
                     } else {
@@ -7538,7 +7547,10 @@
                         tbody.appendChild(tr);
                     });
                     table.appendChild(tbody);
-                    block.appendChild(table);
+                    var wrap = document.createElement('div');
+                    wrap.className = 'pg-tbl-wrap';
+                    wrap.appendChild(table);
+                    block.appendChild(wrap);
                     if (stack.firstChild) {
                         stack.insertBefore(block, stack.firstChild);
                     } else {
@@ -7548,7 +7560,7 @@
             }
 
             resultPanel.style.display = 'block';
-            try { playSound('snap'); } catch(e) {}
+            window._pgMuteExecSound = false;
             showPgPopup(okCount, errCount, statements.length);
         }
 
@@ -7567,7 +7579,6 @@
                 resultMsg.className = 'pass';
                 resultMsg.textContent = '✔ ' + Object.keys(_pgDbMap).length + ' database(s) encontrado(s).';
                 if (rowCount) rowCount.textContent = Object.keys(_pgDbMap).length + ' registro(s)';
-                try { playSound('snap'); } catch(e) {}
                 return result;
             }
 
@@ -7923,7 +7934,7 @@
                 try { _pgDb.exec('CREATE DATABASE IF NOT EXISTS ' + dbName); } catch(e) {}
                 try { _pgDb.exec('USE ' + dbName); } catch(e) {}
                 try {
-                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tblName + ' (' + colsDef + ')');
+                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tblName + ' (' + sanitizeDDL(colsDef) + ')');
                 } catch (e) {
                     console.error("Erro ao criar tabela no DB:", e);
                 }
@@ -8226,7 +8237,6 @@
             resultMsg.textContent = '▶ Consulta executada — ' + sqlResult.rows.length + ' ' + rowWord + ' retornadas.';
             if (rowCount) rowCount.textContent = sqlResult.rows.length + ' registro(s)';
             result.selectResult = sqlResult;
-            try { playSound('snap'); } catch(e) {}
             return result;
         }
 
@@ -8350,6 +8360,20 @@
             return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
+        function sanitizeDDL(colsDef) {
+            var s = colsDef;
+            s = s.replace(/\bUNSIGNED\b/gi, '');
+            s = s.replace(/\bZEROFILL\b/gi, '');
+            s = s.replace(/\b(INT|INTEGER|BIGINT|SMALLINT|TINYINT|MEDIUMINT)\s*\(\d+\)/gi, '$1');
+            s = s.replace(/\bCOMMENT\s+'[^']*'/gi, '');
+            s = s.replace(/\bENGINE\s*=\s*\w+/gi, '');
+            s = s.replace(/\bCHARSET\s*=\s*\w+/gi, '');
+            s = s.replace(/\bCOLLATE\s*=\s*\w+/gi, '');
+            s = s.replace(/\bYEAR\b/gi, 'INT');
+            s = s.replace(/\s{2,}/g, ' ').trim();
+            return s;
+        }
+
         function _pgLoadTables(tables) {
             if (!_pgDb) _pgDb = new alasql.Database();
             var tableDbMap = {};
@@ -8366,10 +8390,10 @@
 
                     var cols = colDefs ? colDefs.map(function(c) { return c.name; }) : Object.keys(rows[0]);
                     if (ddl) {
-                        _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + ddl + ')');
+                        _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + sanitizeDDL(ddl) + ')');
                     } else {
                         var defs = colDefs ? colDefs.map(function(c) { return c.name + ' ' + c.type; }) : cols.map(function(c) { return c + ' ' + sqlType(rows[0][c]); });
-                        _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + defs.join(', ') + ')');
+                        _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + sanitizeDDL(defs.join(', ')) + ')');
                     }
                     _pgDb.exec('DELETE FROM ' + tname);
 
@@ -8391,10 +8415,10 @@
 
                 var cols = colDefs ? colDefs.map(function(c) { return c.name; }) : Object.keys(rows[0]);
                 if (ddl) {
-                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + ddl + ')');
+                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + sanitizeDDL(ddl) + ')');
                 } else {
                     var defs = colDefs ? colDefs.map(function(c) { return c.name + ' ' + c.type; }) : cols.map(function(c) { return c + ' ' + sqlType(rows[0][c]); });
-                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + defs.join(', ') + ')');
+                    _pgDb.exec('CREATE TABLE IF NOT EXISTS ' + tname + ' (' + sanitizeDDL(defs.join(', ')) + ')');
                 }
                 _pgDb.exec('DELETE FROM ' + tname);
 
@@ -9114,7 +9138,7 @@
         var _kbJustOpened = 0;
         var _kbHistoryArmed = false;
         var _kbHistoryClosing = false;
-        function _isMobile() { return window.innerWidth <= 768 && (('ontouchstart' in window) || navigator.maxTouchPoints > 0); }
+        function _isMobile() { return window.innerWidth <= 768 && (('ontouchstart' in window) || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0 || 'ontouchstart' in document.documentElement); }
         function _isKbOpen() { return !!(_kbPopup && _kbPopup.classList.contains('kb-show')); }
         function _getKbHeight() {
             if (!_kbPopup) return 0;
@@ -9211,7 +9235,7 @@
             _kbPopup.addEventListener('touchstart', function(e) {
                 // Garante que o áudio seja desbloqueado ao interagir com o teclado
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                e.stopPropagation(); _kbActive = true;
+                _kbActive = true;
             }, { passive: true });
             _kbPopup.addEventListener('contextmenu', function(e) { e.preventDefault(); });
             var _repeatTimer = null, _repeatInterval = null, _repeatBtn = null;
@@ -9503,67 +9527,58 @@
                 _blurActiveEditor();
             });
         }
-        if (sqlEditor) {
-            var _cmWrap = sqlEditor.getWrapperElement();
-            if (_cmWrap) {
-                var _editorTouchData = null;
-                var _editorTouchMoveHandler = null;
-                
-                _cmWrap.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                    if (_isMobile()) {
-                        // Rastrear toque para detectar deslize
-                        _editorTouchData = {
-                            startX: e.touches[0].clientX,
-                            startY: e.touches[0].clientY,
-                            moved: false
-                        };
-                        
-                        // Handler para detectar movimento
-                        _editorTouchMoveHandler = function() {
-                            if (!_editorTouchData) return;
-                            var currentX = event.touches[0].clientX;
-                            var currentY = event.touches[0].clientY;
-                            var deltaX = Math.abs(currentX - _editorTouchData.startX);
-                            var deltaY = Math.abs(currentY - _editorTouchData.startY);
-                            
-                            // Se moveu mais de 20px em qualquer direção, é um deslize
-                            if (deltaX > 20 || deltaY > 20) {
-                                _editorTouchData.moved = true;
-                            }
-                        };
-                        
-                        _cmWrap.addEventListener('touchmove', _editorTouchMoveHandler, { passive: true });
+        function _attachKbHandlers(cm) {
+            if (!cm) return;
+            var wrap = cm.getWrapperElement();
+            if (!wrap) return;
+            var _tData = null, _tMoveHandler = null;
+            function _tapDetected() {
+                cm.focus();
+                cm.refresh();
+                if (!_kbPopup || !_kbPopup.classList.contains('kb-show')) showKb();
+            }
+            wrap.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                if (_isMobile()) {
+                    _tData = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, moved: false };
+                    _tMoveHandler = function(ev) {
+                        if (!_tData) return;
+                        var cx = ev.touches[0].clientX, cy = ev.touches[0].clientY;
+                        if (Math.abs(cx - _tData.startX) > 20 || Math.abs(cy - _tData.startY) > 20)
+                            _tData.moved = true;
+                    };
+                    wrap.addEventListener('touchmove', _tMoveHandler, { passive: true });
+                }
+            }, { passive: true });
+            wrap.addEventListener('touchend', function() {
+                if (!_isMobile()) return;
+                if (_tMoveHandler) wrap.removeEventListener('touchmove', _tMoveHandler);
+                if (_tData && !_tData.moved) _tapDetected();
+                _tData = null;
+            }, { passive: true });
+            wrap.addEventListener('touchcancel', function() {
+                if (_tMoveHandler) wrap.removeEventListener('touchmove', _tMoveHandler);
+                _tData = null;
+            }, { passive: true });
+            if (window.PointerEvent) {
+                var _pData = null;
+                wrap.addEventListener('pointerdown', function(e) {
+                    if (e.pointerType === 'touch' && _isMobile()) {
+                        _pData = { x: e.clientX, y: e.clientY, moved: false };
                     }
                 }, { passive: true });
-                
-                _cmWrap.addEventListener('touchend', function(e) {
-                    if (!_isMobile()) return;
-                    
-                    // Limpar rastreamento de deslize
-                    if (_editorTouchMoveHandler) {
-                        _cmWrap.removeEventListener('touchmove', _editorTouchMoveHandler);
-                    }
-                    
-                    // Se não foi um deslize, ativar o teclado
-                    if (_editorTouchData && !_editorTouchData.moved) {
-                        sqlEditor.focus();
-                        sqlEditor.refresh();
-                        if (!_kbPopup.classList.contains('kb-show')) showKb();
-                    }
-                    
-                    _editorTouchData = null;
+                wrap.addEventListener('pointermove', function(e) {
+                    if (!_pData) return;
+                    if (Math.abs(e.clientX - _pData.x) > 10 || Math.abs(e.clientY - _pData.y) > 10)
+                        _pData.moved = true;
                 }, { passive: true });
-                
-                _cmWrap.addEventListener('touchcancel', function() {
-                    if (_editorTouchMoveHandler) {
-                        _cmWrap.removeEventListener('touchmove', _editorTouchMoveHandler);
-                    }
-                    _editorTouchData = null;
+                wrap.addEventListener('pointerup', function() {
+                    if (_pData && !_pData.moved) { _pData = null; _tapDetected(); return; }
+                    _pData = null;
                 }, { passive: true });
             }
-            sqlEditor.on('focus', function() { if (_isMobile()) showKb(); });
-            sqlEditor.on('blur', function() {
+            cm.on('focus', function() { if (_isMobile()) showKb(); });
+            cm.on('blur', function() {
                 if (_isMobile()) setTimeout(function() {
                     var active = document.activeElement;
                     if (_isEditorOrKeyboardTarget(active)) return;
@@ -9571,49 +9586,7 @@
                 }, 0);
             });
         }
-        // Playground editor — mesmos handlers do teclado virtual
-        if (_playgroundEditor) {
-            var _pgWrap = _playgroundEditor.getWrapperElement();
-            if (_pgWrap) {
-                var _pgTouchData = null;
-                var _pgTouchMoveHandler = null;
-                _pgWrap.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                    if (_isMobile()) {
-                        _pgTouchData = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, moved: false };
-                        _pgTouchMoveHandler = function() {
-                            if (!_pgTouchData) return;
-                            var cx = event.touches[0].clientX, cy = event.touches[0].clientY;
-                            if (Math.abs(cx - _pgTouchData.startX) > 20 || Math.abs(cy - _pgTouchData.startY) > 20)
-                                _pgTouchData.moved = true;
-                        };
-                        _pgWrap.addEventListener('touchmove', _pgTouchMoveHandler, { passive: true });
-                    }
-                }, { passive: true });
-                _pgWrap.addEventListener('touchend', function() {
-                    if (!_isMobile()) return;
-                    if (_pgTouchMoveHandler) _pgWrap.removeEventListener('touchmove', _pgTouchMoveHandler);
-                    if (_pgTouchData && !_pgTouchData.moved) {
-                        _playgroundEditor.focus();
-                        _playgroundEditor.refresh();
-                        if (!_kbPopup.classList.contains('kb-show')) showKb();
-                    }
-                    _pgTouchData = null;
-                }, { passive: true });
-                _pgWrap.addEventListener('touchcancel', function() {
-                    if (_pgTouchMoveHandler) _pgWrap.removeEventListener('touchmove', _pgTouchMoveHandler);
-                    _pgTouchData = null;
-                }, { passive: true });
-            }
-            _playgroundEditor.on('focus', function() { if (_isMobile()) showKb(); });
-            _playgroundEditor.on('blur', function() {
-                if (_isMobile()) setTimeout(function() {
-                    var active = document.activeElement;
-                    if (_isEditorOrKeyboardTarget(active)) return;
-                    hideKb(false);
-                }, 0);
-            });
-        }
+        if (sqlEditor) _attachKbHandlers(sqlEditor);
         window.addEventListener('resize', _refreshKbLayout);
         if (window.visualViewport) window.visualViewport.addEventListener('resize', _refreshKbLayout);
 
@@ -9672,6 +9645,7 @@
 
         try { initChallenges(); } catch(e) {}
         try { initPlayground(); } catch(e) {}
+        try { if (_playgroundEditor) _attachKbHandlers(_playgroundEditor); } catch(e) {}
 
         // Custom Cursor
         (function() {
