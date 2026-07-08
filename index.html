@@ -314,6 +314,10 @@
 
         @keyframes slideIn { from { opacity: 0; } to { opacity: 1; } }
         .animated-row { animation: slideIn .2s step-end forwards; }
+        @keyframes rowAppear { 0% { opacity: 0; } 60% { opacity: .6; } 100% { opacity: 1; } }
+        .ch-result-row { animation: rowAppear .25s ease-out forwards; }
+        @keyframes resultGlow { 0%,100% { box-shadow: 0 0 0 rgba(126,231,135,0); } 50% { box-shadow: 0 0 28px rgba(126,231,135,.55); } }
+        .result-glow { animation: resultGlow .55s ease-out; }
 
         .code-panel {
             background: var(--panel-bg); border: 2px solid var(--border);
@@ -8498,101 +8502,87 @@
             var tables = challenge.tables;
             var tableNames = Object.keys(tables);
 
-            if (type === 'select') {
+            // Reset source table rows
+            schemaContainer.querySelectorAll('.schema-panel tr').forEach(function(tr){
+                tr.classList.remove('row-highlight','row-match','row-removed');
+                tr.style.opacity = ''; tr.style.textDecoration = '';
+            });
+
+            if (type === 'select' || type === 'where') {
                 var tname = tableNames[0];
                 var rows = schemaContainer.querySelector('[data-tbl="ch-' + tname + '"]').querySelectorAll('tbody tr');
-                var schemaCols = Object.keys(tables[tname][0]);
-                for (var ri = 0; ri < rows.length; ri++) {
-                    var d = getAnimDelayForRow(ri, rows.length);
-                    rows[ri].classList.add('row-highlight');
-                    playSound('scan');
-                    await sleep(d * 0.5);
-                    rows[ri].classList.add('row-match');
-                    playSound('match');
-                    await sleep(d * 0.3);
-                    var nr = document.createElement('tr');
-                    nr.className = 'animated-row row-match';
-                    var cells = rows[ri].querySelectorAll('td');
-                    var html = '';
+                var sourceData = tables[tname];
+                var schemaCols = Object.keys(sourceData[0]);
+                var resultCols = result.cols;
+
+                // Pre-compute match indices via raw data (fast)
+                var matchSet = new Set();
+                if (type === 'select') {
+                    sourceData.forEach(function(_, i) { matchSet.add(i); });
+                } else {
+                    for (var ri = 0; ri < result.rows.length; ri++) {
+                        for (var si = 0; si < sourceData.length; si++) {
+                            if (matchSet.has(si)) continue;
+                            var match = true;
+                            for (var ci = 0; ci < resultCols.length; ci++) {
+                                if (String(result.rows[ri][ci]) !== String(sourceData[si][resultCols[ci]])) {
+                                    match = false; break;
+                                }
+                            }
+                            if (match) { matchSet.add(si); break; }
+                        }
+                    }
+                }
+
+                // Build result HTML (source order)
+                var matchArray = [];
+                var resultHtml = [];
+                var rowHtml;
+                matchSet.forEach(function(si) {
+                    matchArray.push(si);
+                    rowHtml = '<tr class="ch-result-row">';
                     for (var ci = 0; ci < challenge.cols.length; ci++) {
                         var colName = challenge.cols[ci];
-                        var idx = schemaCols.indexOf(colName);
-                        if (idx !== -1) {
-                            html += '<td>' + cells[idx].textContent + '</td>';
-                        } else if (challenge.computedCols && challenge.computedCols[ci]) {
-                            var cc = challenge.computedCols[ci];
-                            var rowObj = {};
-                            schemaCols.forEach(function(sc, si) { rowObj[sc] = cells[si].textContent; });
-                            var val = computeExpr(cc.expr, rowObj);
-                            if (cc.round !== undefined) val = Math.round(val * Math.pow(10, cc.round)) / Math.pow(10, cc.round);
-                            html += '<td>' + val + '</td>';
-                        }
+                        rowHtml += '<td>' + _escHtml(String(sourceData[si][colName])) + '</td>';
                     }
-                    nr.innerHTML = html;
-                    animBody.appendChild(nr);
-                    playSound('pop');
-                    await sleep(d * 0.6);
-                    rows[ri].classList.remove('row-highlight', 'row-match');
-                }
-            } else if (type === 'where') {
-                var tname = tableNames[0];
-                var rows = schemaContainer.querySelector('[data-tbl="ch-' + tname + '"]').querySelectorAll('tbody tr');
-                var schemaCols = Object.keys(tables[tname][0]);
-                var resultCols = result.cols;
-                var matchIndices = [];
-                for (var ri = 0; ri < result.rows.length; ri++) {
-                    for (var si = 0; si < rows.length; si++) {
-                        var rowVals = [];
-                        rows[si].querySelectorAll('td').forEach(function(td) { rowVals.push(td.textContent); });
-                        var match = true;
-                        for (var ci = 0; ci < resultCols.length; ci++) {
-                            var schemaIdx = schemaCols.indexOf(resultCols[ci]);
-                            if (schemaIdx === -1 || String(result.rows[ri][ci]) !== rowVals[schemaIdx]) { match = false; break; }
-                        }
-                        if (match && matchIndices.indexOf(si) === -1) { matchIndices.push(si); break; }
-                    }
-                }
+                    rowHtml += '</tr>';
+                    resultHtml.push(rowHtml);
+                });
+
+                // Phase 1 — Fast sweep
+                for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
+                playSound('scan');
+                await sleep(220);
+
+                var removed = 0;
                 for (var ri = 0; ri < rows.length; ri++) {
-                    var d = getAnimDelayForRow(ri, rows.length);
-                    rows[ri].classList.add('row-highlight');
-                    playSound('scan');
-                    await sleep(d * 0.5);
-                    var isMatch = matchIndices.indexOf(ri) !== -1;
-                    if (isMatch) {
-                        rows[ri].classList.add('row-match');
-                        playSound('match');
-                        await sleep(d * 0.3);
-                        var nr = document.createElement('tr');
-                        nr.className = 'animated-row row-match';
-                        var cells = rows[ri].querySelectorAll('td');
-                        var html = '';
-                        for (var ci = 0; ci < challenge.cols.length; ci++) {
-                            var colName = challenge.cols[ci];
-                            var idx = schemaCols.indexOf(colName);
-                            if (idx !== -1) {
-                                html += '<td>' + cells[idx].textContent + '</td>';
-                            } else if (challenge.computedCols && challenge.computedCols[ci]) {
-                                var cc = challenge.computedCols[ci];
-                                var rowObj = {};
-                                schemaCols.forEach(function(sc, si) { rowObj[sc] = cells[si].textContent; });
-                                var val = computeExpr(cc.expr, rowObj);
-                                if (cc.round !== undefined) val = Math.round(val * Math.pow(10, cc.round)) / Math.pow(10, cc.round);
-                                html += '<td>' + val + '</td>';
-                            }
-                        }
-                        nr.innerHTML = html;
-                        animBody.appendChild(nr);
-                        playSound('pop');
-                        await sleep(d * 0.6);
-                        rows[ri].classList.remove('row-match');
-                    } else {
-                        rows[ri].style.opacity = '.25';
-                        rows[ri].style.textDecoration = 'line-through';
-                        playSound('delete');
-                        await sleep(d * 0.5);
-                    }
-                    rows[ri].classList.remove('row-highlight');
+                    if (!matchSet.has(ri)) { rows[ri].classList.add('row-removed'); removed++; }
                 }
+                if (removed > 0) { playSound('delete'); await sleep(180); }
+
+                for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.remove('row-highlight');
+
+                // Phase 2 — Adaptive reveal
+                var batchSz = resultHtml.length <= 3 ? 1 : resultHtml.length <= 10 ? 2 : 4;
+                for (var i = 0; i < resultHtml.length; i += batchSz) {
+                    var end = Math.min(i + batchSz, resultHtml.length);
+                    for (var j = i; j < end; j++) {
+                        var srcIdx = matchArray[j];
+                        rows[srcIdx].classList.remove('row-removed');
+                        rows[srcIdx].classList.add('row-match');
+                        animBody.insertAdjacentHTML('beforeend', resultHtml[j]);
+                    }
+                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(80); }
+                    else { playSound('pop'); await sleep(160); }
+                }
+
+                // Phase 3 — Celebration
+                await sleep(120);
+                animResult.querySelector('table').classList.add('result-glow');
+                playSound('done');
+                await sleep(450);
+                animResult.querySelector('table').classList.remove('result-glow');
+
             } else if (type === 'join') {
                 var tL = tableNames[0], tR = tableNames[1];
                 var rowsL = schemaContainer.querySelector('[data-tbl="ch-' + tL + '"]').querySelectorAll('tbody tr');
@@ -8600,75 +8590,80 @@
                 var dataL = tables[tL], dataR = tables[tR];
                 var colKeysL = Object.keys(dataL[0]), colKeysR = Object.keys(dataR[0]);
                 var joinColL = colKeysL[0], joinColR = colKeysR[0];
+
+                // Pre-compute matches via raw data
                 var matchedPairs = [];
-                var compCount = 0, totalComps = dataL.length * dataR.length;
                 for (var li = 0; li < dataL.length; li++) {
-                    rowsL[li].classList.add('row-highlight');
                     for (var ri2 = 0; ri2 < dataR.length; ri2++) {
-                        rowsR[ri2].classList.add('row-highlight');
-                        playSound('scan');
-                        var d = getAnimDelayForRow(compCount++, totalComps);
-                        await sleep(d * 0.4);
                         if (dataL[li][joinColL] === dataR[ri2][joinColR]) {
                             matchedPairs.push({l: li, r: ri2});
-                            rowsL[li].classList.add('row-match');
-                            rowsR[ri2].classList.add('row-match');
-                            playSound('match');
-                            await sleep(d * 0.3);
-                            var nr = document.createElement('tr');
-                            nr.className = 'animated-row row-match';
-                            if (challenge.joinDisplayCols) {
-                                var html = '';
-                                challenge.joinDisplayCols.forEach(function(colDef) {
-                                    if (colDef.source === 'index') {
-                                        html += '<td>' + colDef.value + '</td>';
-                                    } else if (colDef.source === 'computed') {
-                                        var rowObj = {};
-                                        colDef.refs.forEach(function(ref) {
-                                            var srcData = ref.src === 'left' ? dataL : dataR;
-                                            var srcRows = ref.src === 'left' ? rowsL : rowsR;
-                                            var srcIdx = ref.src === 'left' ? li : ri2;
-                                            var colKeys = Object.keys(srcData[0]);
-                                            var tdIdx = colKeys.indexOf(ref.col);
-                                            rowObj[ref.col] = srcRows[srcIdx].querySelectorAll('td')[tdIdx].textContent;
-                                        });
-                                        var val = computeExpr(colDef.expr, rowObj);
-                                        if (colDef.round !== undefined) val = Math.round(val * Math.pow(10, colDef.round)) / Math.pow(10, colDef.round);
-                                        html += '<td>' + val + '</td>';
-                                    } else {
-                                        var srcData = colDef.source === 'left' ? dataL : dataR;
-                                        var srcRows = colDef.source === 'left' ? rowsL : rowsR;
-                                        var srcIdx = colDef.source === 'left' ? li : ri2;
-                                        var colKeys = Object.keys(srcData[0]);
-                                        var tdIdx = colKeys.indexOf(colDef.col);
-                                        html += '<td>' + srcRows[srcIdx].querySelectorAll('td')[tdIdx].textContent + '</td>';
-                                    }
-                                });
-                                nr.innerHTML = html;
-                            } else {
-                                var valL = rowsL[li].querySelectorAll('td')[1].textContent;
-                                var valR = rowsR[ri2].querySelectorAll('td')[1].textContent;
-                                nr.innerHTML = '<td>' + valL + '</td><td>' + valR + '</td>';
-                            }
-                            animBody.appendChild(nr);
-                            playSound('pop');
-                            await sleep(d * 0.5);
-                            rowsL[li].classList.remove('row-match');
-                            rowsR[ri2].classList.remove('row-match');
                         }
-                        rowsR[ri2].classList.remove('row-highlight');
                     }
-                    rowsL[li].classList.remove('row-highlight');
                 }
+
+                // Phase 1 — Quick double sweep
+                for (var li = 0; li < dataL.length; li++) rowsL[li].classList.add('row-highlight');
+                await sleep(140);
+                for (var ri2 = 0; ri2 < dataR.length; ri2++) rowsR[ri2].classList.add('row-highlight');
+                playSound('scan');
+                await sleep(200);
+
+                // Phase 2 — Build & reveal result rows
+                var resultHtml = [];
+                for (var pi = 0; pi < matchedPairs.length; pi++) {
+                    var p = matchedPairs[pi];
+                    var h = '<tr class="ch-result-row">';
+                    if (challenge.joinDisplayCols) {
+                        for (var di = 0; di < challenge.joinDisplayCols.length; di++) {
+                            var cd = challenge.joinDisplayCols[di];
+                            if (cd.source === 'index') {
+                                h += '<td>' + _escHtml(String(cd.value)) + '</td>';
+                            } else if (cd.source === 'computed') {
+                                var obj = {};
+                                cd.refs.forEach(function(ref){
+                                    obj[ref.col] = (ref.src === 'left' ? dataL[p.l] : dataR[p.r])[ref.col];
+                                });
+                                var v = computeExpr(cd.expr, obj);
+                                if (cd.round !== undefined) v = Math.round(v * Math.pow(10, cd.round)) / Math.pow(10, cd.round);
+                                h += '<td>' + v + '</td>';
+                            } else {
+                                var src = cd.source === 'left' ? dataL[p.l] : dataR[p.r];
+                                h += '<td>' + _escHtml(String(src[cd.col])) + '</td>';
+                            }
+                        }
+                    } else {
+                        h += '<td>' + _escHtml(String(dataL[p.l][colKeysL[1]])) + '</td>';
+                        h += '<td>' + _escHtml(String(dataR[p.r][colKeysR[1]])) + '</td>';
+                    }
+                    h += '</tr>';
+                    resultHtml.push(h);
+                }
+
+                // Reveal matched rows in adaptive batches
+                var batchSz = resultHtml.length <= 3 ? 1 : resultHtml.length <= 8 ? 2 : 3;
+                for (var i = 0; i < resultHtml.length; i += batchSz) {
+                    var end = Math.min(i + batchSz, resultHtml.length);
+                    for (var j = i; j < end; j++) {
+                        var p = matchedPairs[j];
+                        rowsL[p.l].classList.add('row-match');
+                        rowsR[p.r].classList.add('row-match');
+                        animBody.insertAdjacentHTML('beforeend', resultHtml[j]);
+                    }
+                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(100); }
+                    else { playSound('pop'); await sleep(160); }
+                }
+
+                // filterResult (post-join HAVING, ex: quantidade > 200)
                 if (challenge.filterResult) {
-                    await sleep(d * 0.5);
+                    await sleep(200);
                     var fj = challenge.filterResult;
                     var fjColIdx = challenge.cols.indexOf(fj.col);
+                    // Use fixed 4th child position fallback if col not found by name
                     var toRemove = [];
-                    animBody.querySelectorAll('tr').forEach(function(tr) {
-                        var cellVal = tr.querySelectorAll('td')[fjColIdx];
-                        if (!cellVal) return;
-                        var val = fj.type === 'number' ? parseFloat(cellVal.textContent) : cellVal.textContent;
+                    animBody.querySelectorAll('tr').forEach(function(tr, trIdx){
+                        var td = tr.querySelectorAll('td')[fjColIdx];
+                        if (!td) return;
+                        var val = fj.type === 'number' ? parseFloat(td.textContent) : td.textContent;
                         var keep = false;
                         switch(fj.op) {
                             case '>': keep = val > fj.value; break;
@@ -8681,76 +8676,98 @@
                         if (!keep) {
                             tr.style.opacity = '.25';
                             tr.style.textDecoration = 'line-through';
+                            // Also un-highlight the source rows if possible
+                            if (matchedPairs[trIdx]) {
+                                var sp = matchedPairs[trIdx];
+                                rowsL[sp.l].classList.remove('row-match');
+                                rowsR[sp.r].classList.remove('row-match');
+                            }
                             playSound('delete');
                             toRemove.push(tr);
                         }
                     });
-                    await sleep(600);
-                    toRemove.forEach(function(tr) { tr.remove(); });
+                    await sleep(500);
+                    toRemove.forEach(function(tr){ tr.remove(); });
                 }
+
+                // Phase 3 — Celebration
+                await sleep(120);
+                animResult.querySelector('table').classList.add('result-glow');
+                playSound('done');
+                await sleep(450);
+                animResult.querySelector('table').classList.remove('result-glow');
+
             } else if (type === 'count') {
                 var tname = tableNames[0];
                 var rows = schemaContainer.querySelector('[data-tbl="ch-' + tname + '"]').querySelectorAll('tbody tr');
-                var count = 0;
-                if (accValue) { accValue.textContent = '0'; }
-                if (accDetail) { accDetail.textContent = 'lendo...'; }
-                for (var ri = 0; ri < rows.length; ri++) {
-                    var d = getAnimDelayForRow(ri, rows.length);
-                    rows[ri].classList.add('row-highlight');
-                    playSound('scan');
-                    await sleep(d * 0.6);
-                    count++;
-                    if (accValue) {
-                        accValue.textContent = count;
-                        accValue.classList.add('highlight');
-                    }
-                    if (accDetail) {
-                        accDetail.textContent = 'linha ' + count + ' de ' + rows.length;
-                    }
-                    rows[ri].classList.add('row-match');
-                    playSound('update');
-                    await sleep(d * 0.7);
-                    rows[ri].classList.remove('row-highlight', 'row-match');
-                    if (accValue) { accValue.classList.remove('highlight'); }
+                var totalCount = rows.length;
+                if (accValue) accValue.textContent = '0';
+                if (accDetail) accDetail.textContent = 'lendo...';
+
+                // Quick sweep
+                for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
+                playSound('scan');
+                await sleep(200);
+
+                // Animated count-up (fast)
+                var step = Math.max(1, Math.floor(totalCount / 16));
+                var c = 0;
+                for (c = step; c <= totalCount; c += step) {
+                    if (accValue) accValue.textContent = c;
+                    if (accDetail) accDetail.textContent = 'linha ' + c + ' de ' + totalCount;
+                    await sleep(25);
                 }
-                var nr = document.createElement('tr');
-                nr.className = 'animated-row row-match';
-                nr.innerHTML = '<td>' + count + '</td>';
-                animBody.appendChild(nr);
-                _isBatchLeader = true;
+                if (c - step < totalCount) {
+                    if (accValue) accValue.textContent = totalCount;
+                    if (accDetail) accDetail.textContent = 'linha ' + totalCount + ' de ' + totalCount;
+                }
+                for (var ri = 0; ri < rows.length; ri++) {
+                    rows[ri].classList.remove('row-highlight');
+                    rows[ri].classList.add('row-match');
+                }
                 playSound('pop');
+                animBody.insertAdjacentHTML('beforeend', '<tr class="ch-result-row"><td>' + totalCount + '</td></tr>');
+                await sleep(200);
+
+                animResult.querySelector('table').classList.add('result-glow');
+                playSound('done');
+                await sleep(450);
+                animResult.querySelector('table').classList.remove('result-glow');
+
             } else if (type === 'sum') {
                 var tname = tableNames[0];
                 var rows = schemaContainer.querySelector('[data-tbl="ch-' + tname + '"]').querySelectorAll('tbody tr');
-                var sum = 0;
-                if (accValue) { accValue.textContent = '0'; }
-                if (accDetail) { accDetail.textContent = 'aguardando...'; }
+                var sourceData = tables[tname];
+                var schemaCols = Object.keys(sourceData[0]);
+                var sumColName = schemaCols[schemaCols.length - 2]; // penúltima = coluna numérica
+                var sumTotal = 0;
+                if (accValue) accValue.textContent = '0';
+                if (accDetail) accDetail.textContent = 'aguardando...';
+
+                for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
+                playSound('scan');
+                await sleep(200);
+
+                var step = Math.max(1, Math.floor(rows.length / 12));
                 for (var ri = 0; ri < rows.length; ri++) {
-                    var d = getAnimDelayForRow(ri, rows.length);
-                    rows[ri].classList.add('row-highlight');
-                    playSound('scan');
-                    await sleep(d * 0.6);
-                    var preco = parseInt(rows[ri].querySelectorAll('td')[2].textContent, 10);
-                    sum += preco;
-                    if (accValue) {
-                        accValue.textContent = sum;
-                        accValue.classList.add('highlight');
-                    }
-                    if (accDetail) {
-                        accDetail.textContent = '+' + preco + ' (total ' + sum + ')';
-                    }
+                    sumTotal += Number(sourceData[ri][sumColName]) || 0;
                     rows[ri].classList.add('row-match');
-                    playSound('update');
-                    await sleep(d * 0.7);
-                    rows[ri].classList.remove('row-highlight', 'row-match');
-                    if (accValue) { accValue.classList.remove('highlight'); }
+                    if (ri % step === 0 || ri === rows.length - 1) {
+                        if (accValue) accValue.textContent = sumTotal;
+                        if (accDetail) accDetail.textContent = 'acumulando...';
+                        await sleep(20);
+                    }
                 }
-                var nr = document.createElement('tr');
-                nr.className = 'animated-row row-match';
-                nr.innerHTML = '<td>' + sum + '</td>';
-                animBody.appendChild(nr);
-                _isBatchLeader = true;
+                for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.remove('row-highlight');
+                if (accDetail) accDetail.textContent = 'total: ' + sumTotal;
                 playSound('pop');
+                animBody.insertAdjacentHTML('beforeend', '<tr class="ch-result-row"><td>' + sumTotal + '</td></tr>');
+                await sleep(200);
+
+                animResult.querySelector('table').classList.add('result-glow');
+                playSound('done');
+                await sleep(450);
+                animResult.querySelector('table').classList.remove('result-glow');
             }
             _isBatchLeader = true;
         }
