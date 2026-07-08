@@ -8552,13 +8552,13 @@
                 // Phase 1 — Fast sweep
                 for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
                 playSound('scan');
-                await sleep(220);
+                await sleep(350);
 
                 var removed = 0;
                 for (var ri = 0; ri < rows.length; ri++) {
                     if (!matchSet.has(ri)) { rows[ri].classList.add('row-removed'); removed++; }
                 }
-                if (removed > 0) { playSound('delete'); await sleep(180); }
+                if (removed > 0) { playSound('delete'); await sleep(350); }
 
                 for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.remove('row-highlight');
 
@@ -8572,15 +8572,15 @@
                         rows[srcIdx].classList.add('row-match');
                         animBody.insertAdjacentHTML('beforeend', resultHtml[j]);
                     }
-                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(80); }
-                    else { playSound('pop'); await sleep(160); }
+                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(200); }
+                    else { playSound('pop'); await sleep(350); }
                 }
 
                 // Phase 3 — Celebration
-                await sleep(120);
+                await sleep(250);
                 animResult.querySelector('table').classList.add('result-glow');
                 playSound('done');
-                await sleep(450);
+                await sleep(700);
                 animResult.querySelector('table').classList.remove('result-glow');
 
             } else if (type === 'join') {
@@ -8603,10 +8603,10 @@
 
                 // Phase 1 — Quick double sweep
                 for (var li = 0; li < dataL.length; li++) rowsL[li].classList.add('row-highlight');
-                await sleep(140);
+                await sleep(250);
                 for (var ri2 = 0; ri2 < dataR.length; ri2++) rowsR[ri2].classList.add('row-highlight');
                 playSound('scan');
-                await sleep(200);
+                await sleep(350);
 
                 // Phase 2 — Build & reveal result rows
                 var resultHtml = [];
@@ -8649,13 +8649,13 @@
                         rowsR[p.r].classList.add('row-match');
                         animBody.insertAdjacentHTML('beforeend', resultHtml[j]);
                     }
-                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(100); }
-                    else { playSound('pop'); await sleep(160); }
+                    if (i + batchSz < resultHtml.length) { playSound('update'); await sleep(200); }
+                    else { playSound('pop'); await sleep(350); }
                 }
 
                 // filterResult (post-join HAVING, ex: quantidade > 200)
                 if (challenge.filterResult) {
-                    await sleep(200);
+                    await sleep(300);
                     var fj = challenge.filterResult;
                     var fjColIdx = challenge.cols.indexOf(fj.col);
                     // Use fixed 4th child position fallback if col not found by name
@@ -8686,15 +8686,15 @@
                             toRemove.push(tr);
                         }
                     });
-                    await sleep(500);
+                    await sleep(600);
                     toRemove.forEach(function(tr){ tr.remove(); });
                 }
 
                 // Phase 3 — Celebration
-                await sleep(120);
+                await sleep(250);
                 animResult.querySelector('table').classList.add('result-glow');
                 playSound('done');
-                await sleep(450);
+                await sleep(700);
                 animResult.querySelector('table').classList.remove('result-glow');
 
             } else if (type === 'count') {
@@ -8707,7 +8707,7 @@
                 // Quick sweep
                 for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
                 playSound('scan');
-                await sleep(200);
+                await sleep(350);
 
                 // Animated count-up (fast)
                 var step = Math.max(1, Math.floor(totalCount / 16));
@@ -8715,7 +8715,7 @@
                 for (c = step; c <= totalCount; c += step) {
                     if (accValue) accValue.textContent = c;
                     if (accDetail) accDetail.textContent = 'linha ' + c + ' de ' + totalCount;
-                    await sleep(25);
+                    await sleep(45);
                 }
                 if (c - step < totalCount) {
                     if (accValue) accValue.textContent = totalCount;
@@ -8727,11 +8727,11 @@
                 }
                 playSound('pop');
                 animBody.insertAdjacentHTML('beforeend', '<tr class="ch-result-row"><td>' + totalCount + '</td></tr>');
-                await sleep(200);
+                await sleep(300);
 
                 animResult.querySelector('table').classList.add('result-glow');
                 playSound('done');
-                await sleep(450);
+                await sleep(700);
                 animResult.querySelector('table').classList.remove('result-glow');
 
             } else if (type === 'sum') {
@@ -8746,7 +8746,7 @@
 
                 for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.add('row-highlight');
                 playSound('scan');
-                await sleep(200);
+                await sleep(350);
 
                 var step = Math.max(1, Math.floor(rows.length / 12));
                 for (var ri = 0; ri < rows.length; ri++) {
@@ -8755,18 +8755,18 @@
                     if (ri % step === 0 || ri === rows.length - 1) {
                         if (accValue) accValue.textContent = sumTotal;
                         if (accDetail) accDetail.textContent = 'acumulando...';
-                        await sleep(20);
+                        await sleep(35);
                     }
                 }
                 for (var ri = 0; ri < rows.length; ri++) rows[ri].classList.remove('row-highlight');
                 if (accDetail) accDetail.textContent = 'total: ' + sumTotal;
                 playSound('pop');
                 animBody.insertAdjacentHTML('beforeend', '<tr class="ch-result-row"><td>' + sumTotal + '</td></tr>');
-                await sleep(200);
+                await sleep(300);
 
                 animResult.querySelector('table').classList.add('result-glow');
                 playSound('done');
-                await sleep(450);
+                await sleep(700);
                 animResult.querySelector('table').classList.remove('result-glow');
             }
             _isBatchLeader = true;
@@ -8860,7 +8860,6 @@
                 completedChallenges.add(currentChallenge.id);
                 localStorage.setItem('sql_simulator_progress', JSON.stringify([...completedChallenges]));
                 initChallenges();
-                playSound('done');
                 launchConfetti();
                 setTimeout(function() {
                     var nextBtn = document.getElementById('btn-next');
