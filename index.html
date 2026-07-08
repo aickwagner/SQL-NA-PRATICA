@@ -5936,7 +5936,7 @@
                 {id:50,nome:'Cowboy Tears',artista:'Oliver Tree',reproducoes:5000000,genero:'Country',duracao:177}
               ]},
               cols:['id','nome','reproducoes'],
-              expected:[[5,'Miss You',750000000],[1,'Life Goes On',850000000],[2,'Alien Boy',650000000],[3,'Jerk',380000000],[4,'Hurt',350000000]]
+              expected:[[1,'Life Goes On',850000000],[5,'Miss You',750000000],[2,'Alien Boy',650000000],[3,'Jerk',380000000],[4,'Hurt',350000000]]
             },
             // ============ MÚSICA MÉDIO ============
                         { id:17, title:'Análise Cross-Platform', difficulty:'medio', animationType:'join', category:'Analista Musical',
@@ -6146,7 +6146,7 @@
                 {id:50,nome:'Ricky Martin',genero:'Latin',seguidores:8000000,pais:'Porto Rico'}
               ]},
               cols:['genero','total_artistas'],
-              expected:[['Pop',9],['Hip-Hop',6],['R&B',5],['Reggaeton',5],['Rock',3],['Latin',3],['Electronic',2],['Country',2],['Sertanejo',1]]
+              expected:[['Pop',10],['Hip-Hop',6],['R&B',5],['Reggaeton',5],['Rock',3],['Latin',3],['Electronic',2],['Country',2],['Sertanejo',1]]
             },
 
             { id:20, title:'Ranking de Plataformas', difficulty:'medio', animationType:'join', category:'Analista Musical',
@@ -8841,6 +8841,7 @@
                 msg.textContent = 'Correto! Parabéns!';
                 msg.className = 'pass';
                 completedChallenges.add(currentChallenge.id);
+                localStorage.setItem('sql_simulator_progress', JSON.stringify([...completedChallenges]));
                 initChallenges();
                 playSound('done');
                 launchConfetti();
